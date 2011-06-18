@@ -176,10 +176,15 @@ class PropertiesWindow(gtk.Window):
 			config_file = item[0]
 			config = self._application.associations_manager.get_association_config(config_file)
 
+			# skip adding application if config doesn't exist
+			if config is None:
+				continue
+
 			name = item[1]
-			icon = config['icon']
+			icon = config['icon'] if config.has_key('icon') else 'image-missing'
 			selected = config_file in default_application
 
+			# add application to the list
 			self._store.append((selected, icon, name, config_file))
 
 	def _update_data(self):
@@ -289,12 +294,12 @@ class PropertiesWindow(gtk.Window):
 		application = active_item[3]
 
 		# set default application
-#		command = 'xdg-mime default {0} {1}'.format(application, mime_type)
-#		os.system(command)
+		command = 'xdg-mime default {0} {1}'.format(application, mime_type)
+		os.system(command)
 
 		# select active item
-#		for item in self._store:
-#			item[0] = item.path == active_item.path
+		for item in self._store:
+			item[0] = item.path == active_item.path
 
 	def _create_basic_tab(self):
 		"""Create tab containing basic information"""
