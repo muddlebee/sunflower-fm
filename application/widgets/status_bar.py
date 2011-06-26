@@ -5,9 +5,8 @@ class StatusBar(Gtk.HBox):
 	"""Plugin status bar"""
 
 	def __init__(self):
-		super(StatusBar, self).__init__(False, 15)
+		super(StatusBar, self).__init__(homogeneous=False, spacing=15, border_width=1)
 
-		self.set_border_width(1)
 		self.set_property('no-show-all', True)
 
 		self._icons = {}
