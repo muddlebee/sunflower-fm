@@ -189,7 +189,7 @@ class Terminal(PluginBase):
 	def _configure_accelerators(self):
 		"""Configure accelerator group"""
 		group = AcceleratorGroup(self._parent)
-		keyval = Gtk.gdk.keyval_from_name
+		keyval = Gdk.keyval_from_name
 
 		# give parent chance to register its own accelerator group
 		PluginBase._configure_accelerators(self)
