@@ -5,7 +5,7 @@ class TabLabel(Gtk.HBox):
 	"""Tab label wrapper class"""
 
 	def __init__(self, application, parent):
-		super(TabLabel, self).__init__(False, 0)
+		super(TabLabel, self).__init__(homogeneous=False, spacing=0)
 
 		self._application = application
 		self._parent = parent
@@ -17,18 +17,19 @@ class TabLabel(Gtk.HBox):
 
 		image = Gtk.Image()
 		image.set_from_stock(Gtk.STOCK_CLOSE, Gtk.IconSize.MENU)
-		image_width, image_height = Gtk.icon_size_lookup(Gtk.IconSize.MENU)
+#		image_width, image_height = Gtk.icon_size_lookup(Gtk.IconSize.MENU)
+		image_width, image_height = 16, 16
 		image.show()
-
-		style = Gtk.RcStyle()
-		style.xthickness = 0
-		style.ythickness = 0
+		
+#		style = Gtk.RcStyle()
+#		style.xthickness = 0
+#		style.ythickness = 0
 
 		self._button = Gtk.Button()
 		self._button.set_focus_on_click(False)
 		self._button.add(image)
 		self._button.set_relief(Gtk.ReliefStyle.NONE)
-		self._button.modify_style(style)
+#		self._button.modify_style(style)
 		self._button.connect('clicked', self._close_tab)
 		self._button.set_property('no-show-all', True)
 		self._button.set_size_request(image_width + 2, image_height + 2)
