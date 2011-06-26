@@ -30,7 +30,7 @@ class MountsManager:
 		self._menu_item_no_mounts2.set_property('no-show-all', True)
 
 		# Gnome volume monitor
-		self._volume_monitor = Gio.VolumeMonitor()
+		self._volume_monitor = Gio.VolumeMonitor.get()
 		self._volume_monitor.connect('mount-added', self._add_mount)
 		self._volume_monitor.connect('mount-removed', self._remove_mount)
 
