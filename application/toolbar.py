@@ -75,7 +75,9 @@ class ToolbarManager:
 		count = len(self._config.options('widgets')) / 2
 
 		# remove existing widgets
-		self._toolbar.foreach(lambda item: self._toolbar.remove(item))
+		for index in range(0, self._toolbar.get_n_items()):
+			item = self._toolbar.get_nth_item(index)
+			self._toolbar.remove(item)
 
 		# create new widgets
 		for number in range(0, count):
