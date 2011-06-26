@@ -1,4 +1,5 @@
 from gi.repository import Gtk, Gdk
+
 from accelerator_group import AcceleratorGroup
 from widgets.title_bar import TitleBar
 from widgets.status_bar import StatusBar
@@ -15,7 +16,7 @@ class PluginBase(Gtk.VBox):
 	"""
 
 	def __init__(self, parent, notebook, path=None):
-		super(PluginBase, self).__init__(False, 3)
+		super(PluginBase, self).__init__(homogeneous=False, spacing=3, border_width=2)
 
 		self.path = path
 
@@ -26,15 +27,12 @@ class PluginBase(Gtk.VBox):
 		self._accelerator_groups = []
 		self._configure_accelerators()
 
-		# configure self
-		self.set_border_width(2)
-
 		# create tab label
 		self._tab_label = TabLabel(self._parent, self)
-
+		
 		# title bar
 		self._title_bar = TitleBar(self._parent)
-
+		
 		# status bar
 		self._status_bar = StatusBar()
 
@@ -96,7 +94,7 @@ class PluginBase(Gtk.VBox):
 	def _configure_accelerators(self):
 		"""Configure accelerator group"""
 		group = AcceleratorGroup(self._parent)
-		keyval = Gtk.gdk.keyval_from_name
+		keyval = Gdk.keyval_from_name
 
 		# configure accelerator group
 		group.set_name('plugin_base')
