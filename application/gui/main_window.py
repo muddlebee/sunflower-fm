@@ -13,7 +13,7 @@ from mounts import MountsManager
 from icons import IconManager
 from associations import AssociationManager
 from indicator import Indicator
-from notifications import NotificationManager
+#from notifications import NotificationManager
 from toolbar import ToolbarManager
 from accelerator_manager import AcceleratorManager
 
@@ -75,7 +75,7 @@ class MainWindow(GObject.GObject):
 		self.menu_manager = MenuManager(self)
 		self.mount_manager = None  # we'll create manager later
 		self.associations_manager = AssociationManager()
-		self.notification_manager = NotificationManager(self)
+#		self.notification_manager = NotificationManager(self)
 		self.toolbar_manager = ToolbarManager(self)
 		self.accelerator_manager = AcceleratorManager(self)
 
@@ -499,7 +499,7 @@ class MainWindow(GObject.GObject):
 
 		# mounts menu
 		mounts_image = Gtk.Image()
-		mounts_image.set_from_icon_name('computer', Gtk.ICON_SIZE_MENU)
+		mounts_image.set_from_icon_name('computer', Gtk.IconSize.MENU)
 
 		self._menu_item_mounts = Gtk.ImageMenuItem()
 		self._menu_item_mounts.set_label(_('Mounts'))
@@ -536,7 +536,7 @@ class MainWindow(GObject.GObject):
 
 		self.path_label = Gtk.Label()
 		self.path_label.set_alignment(1, 0.5)
-		self.path_label.set_ellipsize(Pango.ELLIPSIZE_MIDDLE)
+		self.path_label.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
 		self.path_label.show()
 
 		# create history list
@@ -1733,7 +1733,7 @@ class MainWindow(GObject.GObject):
 		"""Load menu accelerator map"""
 		if os.path.isfile(path):
 			# load accelerator map
-			Gtk.accel_map_load(path)
+			Gtk.AccelMap.load(path)
 
 		else:
 			# no existing configuration, set default
