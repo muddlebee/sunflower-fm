@@ -9,7 +9,7 @@ import fnmatch
 import urllib
 import common
 
-from gi.repository import Gtk, Gdk, Gio
+from gi.repository import Gtk, Gdk, Gio, GdkPixbuf
 from plugin_base.item_list import ItemList
 
 from provider import Provider
@@ -38,7 +38,8 @@ COL_SELECTED 	= 13
 
 def register_plugin(application):
 	"""Register plugin classes with application"""
-	application.register_class('file_list', _('Local file list'), FileList)
+#	application.register_class('file_list', _('Local file list'), FileList)
+	application.plugin_classes['file_list'] = FileList
 	application.register_provider(LocalProvider)
 
 
@@ -69,7 +70,7 @@ class FileList(ItemList):
 								bool,	# COL_PARENT
 								str,	# COL_COLOR
 								str, 	# COL_ICON
-								Gtk.gdk.Pixbuf  # COL_SELECTED
+								GdkPixbuf.Pixbuf  # COL_SELECTED
 							)
 
 		# set item list model

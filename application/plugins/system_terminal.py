@@ -6,7 +6,8 @@ from plugins.file_list import FileList
 
 def register_plugin(application):
 	"""Register plugin classes with application"""
-	application.register_class('system_terminal', _('System terminal'), SystemTerminal)
+#	application.register_class('system_terminal', _('System terminal'), SystemTerminal)
+	application.plugin_classes['system_terminal'] = SystemTerminal
 
 
 class SystemTerminal(Terminal):
