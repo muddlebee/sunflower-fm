@@ -12,12 +12,11 @@ class AboutWindow(GObject.GObject):
 	def __init__(self, parent):
 		# create main window
 		super(AboutWindow, self).__init__()
-		self.window = Gtk.Window(Gtk.WindowType.TOPLEVEL)
 
-		# store parent locally, we'll need it later
 		self._parent = parent
 
 		# configure dialog
+		self.window = Gtk.Window(type=Gtk.WindowType.TOPLEVEL)
 		self.window.set_title(_('About program'))
 		self.window.set_size_request(550, 450)
 		self.window.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
@@ -31,7 +30,7 @@ class AboutWindow(GObject.GObject):
 		self.window.connect('delete_event', self._hide)
 
 		# create gui
-		vbox = Gtk.VBox(False, 0)
+		vbox = Gtk.VBox(homogeneous=False, spacing=0)
 
 		# program logo
 		image_file = os.path.abspath(os.path.join(
@@ -57,65 +56,59 @@ class AboutWindow(GObject.GObject):
 		self._program_label.set_alignment(0, 0.5)
 
 		# top horizontal box containing image and program title
-		hbox1 = Gtk.HBox(False, 0)
-		hbox1.set_border_width(5)
+		hbox1 = Gtk.HBox(homogeneous=False, spacing=0, border_width=5)
 
 		hbox1.pack_start(image, False, False, 0)
 		hbox1.pack_start(self._program_label, True, True, 5)
 
-		frame = Gtk.EventBox()
-		frame.add(hbox1)
+		self._title_frame = Gtk.EventBox()
+		self._title_frame.add(hbox1)
 
 		# bottom vbox
-		vbox2 = Gtk.VBox(False, 7)
-		vbox2.set_border_width(7)
+		vbox2 = Gtk.VBox(homogeneous=False, spacing=7, border_width=7)
 
 		# middle content
 		notebook = Gtk.Notebook()
 
-		# copyright tab
 		notebook.append_page(*self._create_copyright_tab())
-
-		# license tab
 		notebook.append_page(*self._create_license_tab())
-
-		# change log tab
 		notebook.append_page(*self._create_changelog_tab())
 
 		# bottom button controls
-		hbox2 = Gtk.HBox(False, 3)
+		hbox2 = Gtk.HBox(homogeneous=False, spacing=3)
 
 		btn_close = Gtk.Button(stock=Gtk.STOCK_CLOSE)
 		btn_close.connect('clicked', self._hide)
 		hbox2.pack_end(btn_close, False, False, 0)
 
 		btn_web1 = Gtk.Button('RCF Group')
-		btn_web1.connect('clicked', parent.goto_web, 'rcf-group.com')
+		btn_web1.connect('clicked', self._parent.goto_web, 'rcf-group.com')
 		hbox2.pack_start(btn_web1, False, False, 0)
 
 		btn_web2 = Gtk.Button('Google Code')
-		btn_web2.connect('clicked', parent.goto_web, 'code.google.com/p/sunflower-fm')
+		btn_web2.connect('clicked', self._parent.goto_web, 'code.google.com/p/sunflower-fm')
 		hbox2.pack_start(btn_web2, False, False, 0)
 
-		# pack ui
-		vbox.pack_start(frame, False, False, padding=0)
-		vbox.pack_start(vbox2, True, True, padding=0)
+		# pack UI
+		vbox.pack_start(self._title_frame, False, False, 0)
+		vbox.pack_start(vbox2, True, True, 0)
 
-		vbox2.pack_start(notebook, True, True, padding=0)
-		vbox2.pack_start(hbox2, False, False, padding=0)
+		vbox2.pack_start(notebook, True, True, 0)
+		vbox2.pack_start(hbox2, False, False, 0)
 
 		self.window.add(vbox)
 
 	def _show(self, widget=None, data=None):
 		"""Show about dialog"""
 		# update color for header label
-		style = self._parent._menu_item_tools.get_style().copy()
+# TODO: Find solution to accessing widget colors
+#		style = self._parent._menu_item_tools.get_style().copy()
 
-		label = self._program_label
-		parent = self._program_label.get_parent().get_parent()
+#		label = self._program_label
+#		parent = self._title_frame
 
-		label.modify_fg(Gtk.StateType.NORMAL, style.fg[Gtk.StateType.NORMAL])
-		parent.modify_bg(Gtk.StateType.NORMAL, style.bg[Gtk.StateType.NORMAL])
+#		label.modify_fg(Gtk.StateType.NORMAL, style.fg[Gtk.StateType.NORMAL])
+#		parent.modify_bg(Gtk.StateType.NORMAL, style.bg[Gtk.StateType.NORMAL])
 
 		# show all widgets and dialog
 		self.window.show_all()
@@ -132,8 +125,7 @@ class AboutWindow(GObject.GObject):
 		tab_label = Gtk.Label(_('Copyright'))
 
 		# container for all the lists
-		vbox = Gtk.VBox(False, 10)
-		vbox.set_border_width(5)
+		vbox = Gtk.VBox(homogeneous=False, spacing=10, border_width=5)
 
 		# program copyright
 		program_info = Gtk.Label(_(
@@ -373,4 +365,3 @@ class AboutWindow(GObject.GObject):
 	def _adjust_label(self, widget, data=None):
 		"""Adjust label size"""
 		widget.set_size_request(data.width-1, -1)
-
