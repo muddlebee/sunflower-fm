@@ -36,19 +36,17 @@ class PreferencesWindow(GObject.GObject):
 		self.window.connect('delete_event', self._hide)
 
 		# create GUI
-		vbox = Gtk.VBox(False, 7)
-		vbox.set_border_width(7)
-
-		hbox = Gtk.HBox(False, 7)
+		vbox = Gtk.VBox(homogeneous=False, spacing=7, border_width=7)
+		hbox = Gtk.HBox(homogeneous=False, spacing=0)
 
 		# create tab label container
 		label_container = Gtk.ScrolledWindow()
-		label_container.set_policy(Gtk.POLICY_AUTOMATIC, Gtk.POLICY_AUTOMATIC)
-		label_container.set_shadow_type(Gtk.SHADOW_IN)
+		label_container.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+		label_container.set_shadow_type(Gtk.ShadowType.IN)
 		label_container.set_size_request(130, -1)
 
 		self._labels = Gtk.ListStore(str, int)
-		self._tab_labels = Gtk.TreeView(self._labels)
+		self._tab_labels = Gtk.TreeView(model=self._labels)
 
 		cell_label = Gtk.CellRendererText()
 		col_label = Gtk.TreeViewColumn(None, cell_label, text=COL_NAME)
@@ -74,10 +72,11 @@ class PreferencesWindow(GObject.GObject):
 		#AcceleratorOptions(self, parent)
 
 		# select first tab
-		self._tab_labels.set_cursor((0,))
+		path = self._labels.get_path(self._labels.get_iter_first())
+		self._tab_labels.set_cursor(path, None, None)
 
 		# create buttons
-		hbox_controls = Gtk.HBox(False, 5)
+		hbox_controls = Gtk.HBox(homogeneous=False, spacing=5)
 
 		btn_close = Gtk.Button(stock=Gtk.STOCK_CLOSE)
 		btn_close.connect('clicked', self._hide)
@@ -196,4 +195,4 @@ class PreferencesWindow(GObject.GObject):
 
 		self._tab_names[name] = tab_number
 		self._labels.append((label, tab_number))
-		self._tabs.append_page(tab)
+#		self._tabs.append_page(tab, Gtk.Label(label=label))
