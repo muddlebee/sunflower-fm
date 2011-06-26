@@ -37,7 +37,7 @@ class PreferencesWindow(GObject.GObject):
 
 		# create GUI
 		vbox = Gtk.VBox(homogeneous=False, spacing=7, border_width=7)
-		hbox = Gtk.HBox(homogeneous=False, spacing=0)
+		hbox = Gtk.HBox(homogeneous=False, spacing=5)
 
 		# create tab label container
 		label_container = Gtk.ScrolledWindow()
@@ -59,7 +59,7 @@ class PreferencesWindow(GObject.GObject):
 		self._tabs = Gtk.Notebook()
 		self._tabs.set_show_tabs(False)
 		self._tabs.set_show_border(False)
-		self._tabs.connect('switch-page', self._handle_page_switch)
+#		self._tabs.connect('switch-page', self._handle_page_switch)
 
 		DisplayOptions(self, parent)
 		ItemListOptions(self, parent)
@@ -166,9 +166,9 @@ class PreferencesWindow(GObject.GObject):
 		if iter_ is not None:
 			new_tab = list_.get_value(iter_, COL_WIDGET)
 
-			self._tabs.handler_block_by_func(self._handle_page_switch)
+#			self._tabs.handler_block_by_func(self._handle_page_switch)
 			self._tabs.set_current_page(new_tab)
-			self._tabs.handler_unblock_by_func(self._handle_page_switch)
+#			self._tabs.handler_unblock_by_func(self._handle_page_switch)
 
 	def _handle_page_switch(self, widget, page, page_num, data=None):
 		"""Handle changing page without user interaction"""
@@ -195,4 +195,4 @@ class PreferencesWindow(GObject.GObject):
 
 		self._tab_names[name] = tab_number
 		self._labels.append((label, tab_number))
-#		self._tabs.append_page(tab, Gtk.Label(label=label))
+		self._tabs.append_page(tab, None)
