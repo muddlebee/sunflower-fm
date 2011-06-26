@@ -19,12 +19,12 @@ class MenuManager:
 
 	def _item_normal(self, item):
 		"""Create normal menu item"""
-		return Gtk.MenuItem(label = item['label'], use_underline = True)
+		return Gtk.MenuItem(label=item['label'], use_underline=True)
 
 	def _item_checkbox(self, item):
 		"""Create checkbox menu item"""
 		active = item['active'] if 'active' in item else False
-		result = Gtk.CheckMenuItem(label = item['label'], use_underline = True)
+		result = Gtk.CheckMenuItem(label=item['label'], use_underline=True)
 		result.set_active(active)
 
 		return result
@@ -36,7 +36,7 @@ class MenuManager:
 		else:
 			group = None
 
-		return Gtk.RadioMenuItem(group, item['label'], use_underline = True)
+		return Gtk.RadioMenuItem(group, item['label'], use_underline=True)
 
 	def _item_separator(self, item):
 		"""Create separator"""
@@ -56,6 +56,7 @@ class MenuManager:
 		try:
 			result.set_label(item['label'])
 			result.set_use_underline(True)
+			
 		except:
 			# walk-around for problems with GTK+ on windows systems
 			item = Gtk.Label(item['label'])
