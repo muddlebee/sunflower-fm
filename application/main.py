@@ -5,7 +5,8 @@ try:
 	# try to import GTK
 	import pygtk
 	pygtk.require20()
-	import gtk
+	
+	from gi.repository import Gdk
 
 except:
 	# print error and die
@@ -17,7 +18,7 @@ path_application = os.path.abspath(os.path.dirname(sys.argv[0]))
 sys.path.insert(1, path_application)
 
 # initialize threads
-gtk.gdk.threads_init()
+Gdk.threads_init()
 
 # change working directory
 os.chdir(os.path.dirname(path_application))

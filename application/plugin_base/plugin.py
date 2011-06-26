@@ -1,6 +1,4 @@
-import gtk
-import pango
-
+from gi.repository import Gtk, Gdk
 from accelerator_group import AcceleratorGroup
 from widgets.title_bar import TitleBar
 from widgets.status_bar import StatusBar
@@ -8,7 +6,7 @@ from widgets.tab_label import TabLabel
 from gui.preferences.display import VISIBLE_ALWAYS
 
 
-class PluginBase(gtk.VBox):
+class PluginBase(Gtk.VBox):
 	"""Abstract plugin class
 
 	This class provides basic and common GUI components for
@@ -17,7 +15,7 @@ class PluginBase(gtk.VBox):
 	"""
 
 	def __init__(self, parent, notebook, path=None):
-		gtk.VBox.__init__(self, False, 3)
+		super(PluginBase, self).__init__(False, 3)
 
 		self.path = path
 
@@ -75,13 +73,13 @@ class PluginBase(gtk.VBox):
 		if actions is not None:
 			# configure drag and drop features
 			self._main_object.drag_dest_set(
-										gtk.DEST_DEFAULT_ALL,
+										Gtk.DestDefaults.ALL,
 										types,
 										actions
 									)
 
 			self._main_object.drag_source_set(
-										gtk.gdk.BUTTON1_MASK,
+										Gdk.ModifierType.BUTTON1_MASK,
 										types,
 										actions
 									)
@@ -98,7 +96,7 @@ class PluginBase(gtk.VBox):
 	def _configure_accelerators(self):
 		"""Configure accelerator group"""
 		group = AcceleratorGroup(self._parent)
-		keyval = gtk.gdk.keyval_from_name
+		keyval = Gtk.gdk.keyval_from_name
 
 		# configure accelerator group
 		group.set_name('plugin_base')
@@ -113,10 +111,10 @@ class PluginBase(gtk.VBox):
 
 		# configure accelerators
 		group.set_accelerator('focus_oposite_object', keyval('Tab'), 0)
-		group.set_accelerator('next_tab', keyval('Tab'), gtk.gdk.CONTROL_MASK)
-		group.set_accelerator('previous_tab', keyval('Tab'), gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK)
-		group.set_accelerator('duplicate_tab', keyval('t'), gtk.gdk.CONTROL_MASK)
-		group.set_accelerator('close_tab', keyval('w'), gtk.gdk.CONTROL_MASK)
+		group.set_accelerator('next_tab', keyval('Tab'), Gdk.ModifierType.CONTROL_MASK)
+		group.set_accelerator('previous_tab', keyval('Tab'), Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.SHIFT_MASK)
+		group.set_accelerator('duplicate_tab', keyval('t'), Gdk.ModifierType.CONTROL_MASK)
+		group.set_accelerator('close_tab', keyval('w'), Gdk.ModifierType.CONTROL_MASK)
 
 		# add accelerator group to the list
 		self._accelerator_groups.append(group)
@@ -164,7 +162,7 @@ class PluginBase(gtk.VBox):
 
 	def _control_got_focus(self, widget, data=None):
 		"""List focus in event"""
-		self._title_bar.set_state(gtk.STATE_SELECTED)
+		self._title_bar.set_state(Gtk.StateType.SELECTED)
 		self._parent._set_active_object(self)
 
 		# activate accelerators
@@ -173,7 +171,7 @@ class PluginBase(gtk.VBox):
 
 	def _control_lost_focus(self, widget, data=None):
 		"""List focus out event"""
-		self._title_bar.set_state(gtk.STATE_NORMAL)
+		self._title_bar.set_state(Gtk.StateType.NORMAL)
 
 		# deactivate accelerators
 		for group in self._accelerator_groups:
@@ -219,7 +217,7 @@ class PluginBase(gtk.VBox):
 		"""Handles key events in item list"""
 		result = False
 
-		if gtk.gdk.keyval_name(event.keyval) == 'Tab':
+		if Gtk.gdk.keyval_name(event.keyval) == 'Tab':
 			for group in self._accelerator_groups:
 				result = group.trigger_accelerator(event.keyval, event.state)
 

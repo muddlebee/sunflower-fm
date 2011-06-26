@@ -1,20 +1,21 @@
 import os
-import gtk
-import gio
 import mimetypes
+
+from gi.repository import Gio, Gtk
+
 
 class IconManager:
 	_icon_theme = None
 
 	def __init__(self, parent):
 		self._parent = parent
-		self._icon_theme = gtk.icon_theme_get_default()
+		self._icon_theme = Gtk.IconTheme.get_default()
 
 	def has_icon(self, icon_name):
 		"""Check if icon with specified name exists in theme"""
 		return self._icon_theme.has_icon(icon_name)
 
-	def get_icon_for_file(self, filename, size=gtk.ICON_SIZE_MENU):
+	def get_icon_for_file(self, filename):
 		"""Load icon for specified file"""
 		result = 'document'
 		mime_type = mimetypes.guess_type(filename, False)[0]
@@ -22,7 +23,7 @@ class IconManager:
 
 		# get icon names
 		if mime_type is not None:
-			themed_icon = gio.content_type_get_icon(mime_type)
+			themed_icon = Gio.content_type_get_icon(mime_type)
 
 		# get only valid icon names
 		if themed_icon is not None:

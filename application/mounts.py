@@ -1,6 +1,4 @@
-import gtk
-
-from gio import VolumeMonitor
+from gi.repository import Gtk, Gio
 
 COL_DEVICE		= 0
 COL_MOUNT_POINT = 1
@@ -17,13 +15,13 @@ class MountsManager:
 		menu_manager = self._application.menu_manager
 
 		# create mounts menu
-		self._menu = gtk.Menu()
+		self._menu = Gtk.Menu()
 		self._menu_item.set_submenu(self._menu)
 
 		self._menu_unmount = menu_manager.get_item_by_name('unmount_menu').get_submenu()
 
 		# create item for usage when there are no mounts
-		self._menu_item_no_mounts = gtk.MenuItem(label=_('Mount list is empty'))
+		self._menu_item_no_mounts = Gtk.MenuItem(label=_('Mount list is empty'))
 		self._menu_item_no_mounts.set_sensitive(False)
 		self._menu_item_no_mounts.set_property('no-show-all', True)
 		self._menu.append(self._menu_item_no_mounts)
@@ -31,8 +29,8 @@ class MountsManager:
 		self._menu_item_no_mounts2 = menu_manager.get_item_by_name('mount_list_empty')
 		self._menu_item_no_mounts2.set_property('no-show-all', True)
 
-		# gnome volume monitor
-		self._volume_monitor = VolumeMonitor()
+		# Gnome volume monitor
+		self._volume_monitor = Gio.VolumeMonitor()
 		self._volume_monitor.connect('mount-added', self._add_mount)
 		self._volume_monitor.connect('mount-removed', self._remove_mount)
 
@@ -79,10 +77,10 @@ class MountsManager:
 
 	def _add_item(self, text, path, icon):
 		"""Add new menu item to the list"""
-		image = gtk.Image()
-		image.set_from_icon_name(icon, gtk.ICON_SIZE_MENU)
+		image = Gtk.Image()
+		image.set_from_icon_name(icon, Gtk.IconSize.MENU)
 
-		menu_item = gtk.ImageMenuItem()
+		menu_item = Gtk.ImageMenuItem()
 		menu_item.set_label(text)
 		menu_item.set_image(image)
 		menu_item.set_always_show_image(True)
@@ -94,10 +92,10 @@ class MountsManager:
 
 	def _add_unmount_item(self, text, path, icon):
 		"""Add new menu item used for unmounting"""
-		image = gtk.Image()
-		image.set_from_icon_name(icon, gtk.ICON_SIZE_MENU)
+		image = Gtk.Image()
+		image.set_from_icon_name(icon, Gtk.IconSize.MENU)
 
-		menu_item = gtk.ImageMenuItem()
+		menu_item = Gtk.ImageMenuItem()
 		menu_item.set_label(text)
 		menu_item.set_image(image)
 		menu_item.set_always_show_image(True)
@@ -133,11 +131,11 @@ class MountsManager:
 
 		else:
 			# print error
-			dialog = gtk.MessageDialog(
+			dialog = Gtk.MessageDialog(
 									self,
-									gtk.DIALOG_DESTROY_WITH_PARENT,
-									gtk.MESSAGE_WARNING,
-									gtk.BUTTONS_OK,
+									Gtk.DialogFlags.DESTROY_WITH_PARENT,
+									Gtk.MessageType.WARNING,
+									Gtk.ButtonsType.OK,
 									_("Specified item can not be unmounted.")
 								)
 			dialog.run()

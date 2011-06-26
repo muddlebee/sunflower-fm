@@ -1,6 +1,5 @@
 import os
 import shutil
-import gtk
 import time
 import locale
 import stat
@@ -10,20 +9,15 @@ import fnmatch
 import urllib
 import common
 
+from gi.repository import Gtk, Gdk, Gio
+from plugin_base.item_list import ItemList
+
 from provider import Provider
 from operation import DeleteOperation, CopyOperation, MoveOperation
 from gui.input_dialog import FileCreateDialog, DirectoryCreateDialog
 from gui.input_dialog import CopyDialog, MoveDialog, RenameDialog
 from gui.properties_window import PropertiesWindow
 from widgets.thumbnail_view import ThumbnailView
-
-# try to import I/O library
-try:
-	import gio
-except:
-	gio = None
-
-from plugin_base.item_list import ItemList
 
 # constants
 COL_NAME 		= 0
@@ -44,7 +38,7 @@ COL_SELECTED 	= 13
 
 def register_plugin(application):
 	"""Register plugin classes with application"""
-	application.register_class(_('Local file list'), FileList)
+	application.register_class('file_list', _('Local file list'), FileList)
 	application.register_provider(LocalProvider)
 
 
@@ -58,10 +52,10 @@ class FileList(ItemList):
 	"""
 
 	def __init__(self, parent, notebook, path=None, sort_column=None, sort_ascending=True):
-		ItemList.__init__(self, parent, notebook, path, sort_column, sort_ascending)
+		super(FileList, self).__init__(parent, notebook, path, sort_column, sort_ascending)
 
 		# storage system for list items
-		self._store = gtk.ListStore(
+		self._store = Gtk.ListStore(
 								str,	# COL_NAME
 								str,	# COL_FNAME
 								str,	# COL_EXT
@@ -75,14 +69,14 @@ class FileList(ItemList):
 								bool,	# COL_PARENT
 								str,	# COL_COLOR
 								str, 	# COL_ICON
-								gtk.gdk.Pixbuf  # COL_SELECTED
+								Gtk.gdk.Pixbuf  # COL_SELECTED
 							)
 
 		# set item list model
 		self._item_list.set_model(self._store)
 
 		# selection image
-		image = gtk.Image()
+		image = Gtk.Image()
 		image.set_from_file(os.path.abspath(os.path.join(
 									'images',
 									'selection_arrow.png'
@@ -91,13 +85,13 @@ class FileList(ItemList):
 		self._pixbuf_selection = image.get_pixbuf()
 
 		# create columns
-		cell_selected = gtk.CellRendererPixbuf()
-		cell_icon = gtk.CellRendererPixbuf()
-		cell_name = gtk.CellRendererText()
-		cell_extension = gtk.CellRendererText()
-		cell_size = gtk.CellRendererText()
-		cell_mode = gtk.CellRendererText()
-		cell_date = gtk.CellRendererText()
+		cell_selected = Gtk.CellRendererPixbuf()
+		cell_icon = Gtk.CellRendererPixbuf()
+		cell_name = Gtk.CellRendererText()
+		cell_extension = Gtk.CellRendererText()
+		cell_size = Gtk.CellRendererText()
+		cell_mode = Gtk.CellRendererText()
+		cell_date = Gtk.CellRendererText()
 
 		cell_selected.set_property('width', 6)
 		cell_extension.set_property('size-points', 8)
@@ -107,11 +101,11 @@ class FileList(ItemList):
 		cell_date.set_property('size-points', 8)
 
 		# create columns
-		col_file = gtk.TreeViewColumn(_('Name'))
-		col_extension = gtk.TreeViewColumn(_('Ext'))
-		col_size = gtk.TreeViewColumn(_('Size'))
-		col_mode = gtk.TreeViewColumn(_('Mode'))
-		col_date = gtk.TreeViewColumn(_('Date'))
+		col_file = Gtk.TreeViewColumn(_('Name'))
+		col_extension = Gtk.TreeViewColumn(_('Ext'))
+		col_size = Gtk.TreeViewColumn(_('Size'))
+		col_mode = Gtk.TreeViewColumn(_('Mode'))
+		col_date = Gtk.TreeViewColumn(_('Date'))
 
 		# add cell renderer to columns
 		col_file.pack_start(cell_icon, False)
@@ -137,20 +131,20 @@ class FileList(ItemList):
 		col_date.add_attribute(cell_date, 'text', COL_FDATE)
 
 		col_file.set_resizable(True)
-		col_file.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+		col_file.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
 
 		col_extension.set_resizable(True)
-		col_extension.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+		col_extension.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
 
 		col_size.set_resizable(True)
 		col_size.set_alignment(1)
-		col_size.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+		col_size.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
 
 		col_mode.set_resizable(True)
-		col_mode.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+		col_mode.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
 
 		col_date.set_resizable(True)
-		col_date.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+		col_date.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
 
 		# set default column sizes for file list
 		self._columns_size = [200, 50, 70, 50, 100]
@@ -197,10 +191,10 @@ class FileList(ItemList):
 
 		# set grid lines
 		grid_lines = (
-					gtk.TREE_VIEW_GRID_LINES_NONE,
-					gtk.TREE_VIEW_GRID_LINES_HORIZONTAL,
-					gtk.TREE_VIEW_GRID_LINES_VERTICAL,
-					gtk.TREE_VIEW_GRID_LINES_BOTH,
+					Gtk.TreeViewGridLines.NONE,
+					Gtk.TreeViewGridLines.HORIZONTAL,
+					Gtk.TreeViewGridLines.VERTICAL,
+					Gtk.TreeViewGridLines.BOTH,
 				)[self._parent.options.getint('main', 'grid_lines')]
 		self._item_list.set_grid_lines(grid_lines)
 
@@ -209,7 +203,7 @@ class FileList(ItemList):
 
 		# set sort function
 		if self._sort_column is None:
-			# defaultly sort by name
+			# default sort by name
 			self._sort_column = COL_NAME
 			self._sort_ascending = True
 
@@ -341,7 +335,7 @@ class FileList(ItemList):
 		dialog.destroy()
 
 		# create dialog
-		if response[0] == gtk.RESPONSE_OK:
+		if response[0] is Gtk.ResponseType.OK:
 			try:
 				# set this item to be focused on add
 				self._item_to_focus = response[1]
@@ -357,11 +351,11 @@ class FileList(ItemList):
 
 			except OSError as error:
 				# error creating, report to user
-				dialog = gtk.MessageDialog(
+				dialog = Gtk.MessageDialog(
 										self._parent,
-										gtk.DIALOG_DESTROY_WITH_PARENT,
-										gtk.MESSAGE_ERROR,
-										gtk.BUTTONS_OK,
+										Gtk.DialogFlags.DESTROY_WITH_PARENT,
+										Gtk.MessageType.ERROR,
+										Gtk.ButtonsType.OK,
 										_(
 											"There was an error creating directory. "
 											"Make sure you have enough permissions. "
@@ -385,7 +379,7 @@ class FileList(ItemList):
 		dialog.destroy()
 
 		# create dialog
-		if response[0] == gtk.RESPONSE_OK:
+		if response[0] is Gtk.ResponseType.OK:
 			try:
 				# try to create file
 				if provider.is_file(os.path.join(self.path, response[1])):
@@ -422,11 +416,11 @@ class FileList(ItemList):
 
 			except OSError as error:
 				# error creating, report to user
-				dialog = gtk.MessageDialog(
+				dialog = Gtk.MessageDialog(
 										self._parent,
-										gtk.DIALOG_DESTROY_WITH_PARENT,
-										gtk.MESSAGE_ERROR,
-										gtk.BUTTONS_OK,
+										Gtk.DialogFlags.DESTROY_WITH_PARENT,
+										Gtk.MessageType.ERROR,
+										Gtk.ButtonsType.OK,
 										_(
 											"There was an error creating file. "
 											"Make sure you have enough permissions."
@@ -440,11 +434,11 @@ class FileList(ItemList):
 		list_ = self._get_selection_list()
 		if list_ is None: return
 
-		dialog = gtk.MessageDialog(
+		dialog = Gtk.MessageDialog(
 								self._parent,
-								gtk.DIALOG_DESTROY_WITH_PARENT,
-								gtk.MESSAGE_QUESTION,
-								gtk.BUTTONS_YES_NO,
+								Gtk.DialogFlags.DESTROY_WITH_PARENT,
+								Gtk.MessageType.QUESTION,
+								Gtk.ButtonsType.YES_NO,
 								ngettext(
 									"You are about to remove {0} item.\n"
 									"Are you sure about this?",
@@ -456,12 +450,12 @@ class FileList(ItemList):
 		result = dialog.run()
 		dialog.destroy()
 
-		if result == gtk.RESPONSE_YES:
+		if result == Gtk.ResponseType.YES:
 			# if user is sure about removal create operation
 			operation = DeleteOperation(
 									self._parent,
 									self.get_provider()
-									)
+								)
 			operation.start()
 
 	def _copy_files(self, widget=None, data=None):
@@ -473,10 +467,10 @@ class FileList(ItemList):
 						self._parent,
 						self.get_provider(),
 						self._get_other_provider().get_path()
-						)
+					)
 		result = dialog.get_response()
 
-		if result[0] == gtk.RESPONSE_OK:
+		if result[0] is Gtk.ResponseType.OK:
 			# if user confirmed copying
 			operation = CopyOperation(
 									self._parent,
@@ -497,7 +491,7 @@ class FileList(ItemList):
 						)
 		result = dialog.get_response()
 
-		if result[0] == gtk.RESPONSE_OK:
+		if result[0] is Gtk.ResponseType.OK:
 			# if user confirmed copying
 			operation = MoveOperation(
 									self._parent,
@@ -514,7 +508,7 @@ class FileList(ItemList):
 		dialog = RenameDialog(self._parent, selection)
 		result = dialog.get_response()
 
-		if result[0] == gtk.RESPONSE_OK:
+		if result[0] is Gtk.ResponseType.OK:
 			if not self.get_provider().exists(result[1], relative_to=self.path):
 				try:
 					# rename selected item
@@ -525,11 +519,11 @@ class FileList(ItemList):
 
 				except IOError as error:
 					# problem renaming item
-					dialog = gtk.MessageDialog(
+					dialog = Gtk.MessageDialog(
 											self,
-											gtk.DIALOG_DESTROY_WITH_PARENT,
-											gtk.MESSAGE_ERROR,
-											gtk.BUTTONS_OK,
+											Gtk.DialogFlags.DESTROY_WITH_PARENT,
+											Gtk.MessageType.ERROR,
+											Gtk.ButtonsType.OK,
 											_(
 												"Error renaming specified item. Make sure "
 												"you have enough permissions."
@@ -540,11 +534,11 @@ class FileList(ItemList):
 
 			else:
 				# file/directory already exists
-				dialog = gtk.MessageDialog(
+				dialog = Gtk.MessageDialog(
 										self._parent,
-										gtk.DIALOG_DESTROY_WITH_PARENT,
-										gtk.MESSAGE_ERROR,
-										gtk.BUTTONS_OK,
+										Gtk.DialogFlags.DESTROY_WITH_PARENT,
+										Gtk.MessageType.ERROR,
+										Gtk.ButtonsType.OK,
 										_(
 											"File or directory with specified name already "
 											"exists in current directory. Item could not "
@@ -717,7 +711,7 @@ class FileList(ItemList):
 			column.set_sort_indicator(selected)
 
 		# apply sorting function
-		order = [gtk.SORT_DESCENDING, gtk.SORT_ASCENDING][self._sort_ascending]
+		order = [Gtk.SortType.DESCENDING, Gtk.SortType.ASCENDING][self._sort_ascending]
 		self._sort_column_widget.set_sort_order(order)
 
 		self._store.set_sort_func(self._sort_column, self._sort_list)
@@ -760,7 +754,7 @@ class FileList(ItemList):
 		show_hidden = self._parent.options.getboolean('main', 'show_hidden')
 
 		# node created
-		if event is gio.FILE_MONITOR_EVENT_CREATED:
+		if event is Gio.FileMonitorEvent.CREATED:
 			# temporarily fix problem with duplicating items when file was saved with GIO
 			if self._find_iter_by_name(file_.get_basename()) is None:
 				self._add_item(file_.get_basename(), show_hidden)
@@ -769,11 +763,11 @@ class FileList(ItemList):
 				self._update_item_details_by_name(file_.get_basename())
 
 		# node deleted
-		elif event is gio.FILE_MONITOR_EVENT_DELETED:
+		elif event is Gio.FileMonitorEvent.DELETED:
 			self._delete_item_by_name(file_.get_basename())
 
 		# node changed
-		elif event is gio.FILE_MONITOR_EVENT_CHANGED:
+		elif event is Gio.FileMonitorEvent.CHANGED:
 			self._update_item_details_by_name(file_.get_basename())
 
 		self._change_title_text()
@@ -1067,11 +1061,11 @@ class FileList(ItemList):
 
 		if os.path.dirname(path) != self.path:
 			# handle data
-			if drag_context.action in (gtk.gdk.ACTION_COPY, gtk.gdk.ACTION_MOVE):
+			if drag_context.action in (Gdk.DragAction.COPY, Gdk.DragAction.MOVE):
 				# handle copy and move operations
 				operation = {
-							gtk.gdk.ACTION_COPY: 'copy',
-							gtk.gdk.ACTION_MOVE: 'move'
+							Gdk.DragAction.COPY: 'copy',
+							Gdk.DragAction.MOVE: 'move'
 						}
 
 				result = self._handle_external_data(
@@ -1080,7 +1074,7 @@ class FileList(ItemList):
 												list_
 											)
 
-			elif drag_context.action is gtk.gdk.ACTION_LINK:
+			elif drag_context.action is Gdk.DragAction.LINK:
 				# handle linking
 				# TODO: Finish linking code!
 				result = False
@@ -1090,11 +1084,11 @@ class FileList(ItemList):
 
 		else:
 			# notify user that he's trying to drag and drop items in same directory
-			dialog = gtk.MessageDialog(
+			dialog = Gtk.MessageDialog(
 									self._parent,
-									gtk.DIALOG_DESTROY_WITH_PARENT,
-									gtk.MESSAGE_WARNING,
-									gtk.BUTTONS_OK,
+									Gtk.DialogFlags.DESTROY_WITH_PARENT,
+									Gtk.MessageType.WARNING,
+									Gtk.ButtonsType.OK,
 									_(
 										'Drag and drop functionality can not '
 										'be used if source and destination are same!'
@@ -1125,12 +1119,12 @@ class FileList(ItemList):
 
 	def _get_supported_drag_actions(self):
 		"""Return integer representing supported drag'n'drop actions"""
-		return gtk.gdk.ACTION_COPY | gtk.gdk.ACTION_MOVE  # | gtk.gdk.ACTION_LINK # add later
+		return Gdk.DragAction.COPY | Gdk.DragAction.MOVE  # | Gtk.gdk.ACTION_LINK # add later
 
 	def change_path(self, path=None, selected=None):
 		"""Change file list path"""
 		# cancel current directory monitor
-		if gio is not None and self._fs_monitor is not None:
+		if Gio is not None and self._fs_monitor is not None:
 			self._fs_monitor.cancel()
 
 		# clear list
@@ -1181,11 +1175,11 @@ class FileList(ItemList):
 
 		except OSError as error:
 			# problem with listing directory, ask user what to do
-			dialog = gtk.MessageDialog(
+			dialog = Gtk.MessageDialog(
 									self._parent,
-									gtk.DIALOG_DESTROY_WITH_PARENT,
-									gtk.MESSAGE_ERROR,
-									gtk.BUTTONS_YES_NO,
+									Gtk.DialogFlags.DESTROY_WITH_PARENT,
+									Gtk.MessageType.ERROR,
+									Gtk.ButtonsType.YES_NO,
 									_(
 										"Error changing working directory. "
 										"\n\n{0}\n\nWould you like to retry?"
@@ -1194,7 +1188,7 @@ class FileList(ItemList):
 			result = dialog.run()
 			dialog.destroy()
 
-			if result == gtk.RESPONSE_YES:
+			if result is Gtk.ResponseType.YES:
 				self.change_path(path)
 
 			else:
@@ -1235,12 +1229,12 @@ class FileList(ItemList):
 			self._item_list.scroll_to_cell(path)
 
 		# create file monitor
-		if gio is not None and self.get_provider().is_local:
+		if self.get_provider().is_local:
 			try:
-				self._fs_monitor = gio.File(self.path).monitor_directory()
+				self._fs_monitor = Gio.File(self.path).monitor_directory()
 				self._fs_monitor.connect('changed', self._directory_changed)
 
-			except gio.Error:
+			except Gio.Error:
 				# monitoring is probably not supported by the backend
 				self._fs_monitor = None
 
@@ -1388,10 +1382,10 @@ class FileList(ItemList):
 
 		# apply grid lines
 		grid_lines = (
-					gtk.TREE_VIEW_GRID_LINES_NONE,
-					gtk.TREE_VIEW_GRID_LINES_HORIZONTAL,
-					gtk.TREE_VIEW_GRID_LINES_VERTICAL,
-					gtk.TREE_VIEW_GRID_LINES_BOTH,
+					Gtk.TreeViewGridLines.NONE,
+					Gtk.TreeViewGridLines.HORIZONTAL,
+					Gtk.TreeViewGridLines.VERTICAL,
+					Gtk.TreeViewGridLines.BOTH,
 				)[self._parent.options.getint('main', 'grid_lines')]
 		self._item_list.set_grid_lines(grid_lines)
 

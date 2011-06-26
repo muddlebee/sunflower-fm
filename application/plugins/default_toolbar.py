@@ -1,7 +1,7 @@
 import os
-import gtk
 import user
 
+from gi.repository import Gtk
 from plugin_base.toolbar_factory import ToolbarFactory
 
 
@@ -14,12 +14,12 @@ class DefaultToolbar(ToolbarFactory):
 	"""Default toolbar factory implementation for Sunflower."""
 
 	def __init__(self, application):
-		ToolbarFactory.__init__(self, application)
+		super(DefaultToolbar, self).__init__(application)
 
 		self._widgets = {
 		        'parent_directory_button': {
 		            'description': _('Parent directory button'),
-		            'icon': gtk.STOCK_GO_UP,
+		            'icon': Gtk.STOCK_GO_UP,
 		            'dialog': None,
 		            'class': ParentDirectoryButton,
 		        },
@@ -85,18 +85,18 @@ class DefaultToolbar(ToolbarFactory):
 
 		if DialogClass is not None:
 			# create configuration dialog
-			dialog = DialogClass(self._application, name, config)
+			dialog = DialogClass(self._application.window, name, config)
 
 			# show dialog and get use input
 			result = dialog.get_response()
 
 		else:
 			# there is no configuration dialog for this widget type
-			dialog = gtk.MessageDialog(
-		                            self._application,
-		                            gtk.DIALOG_DESTROY_WITH_PARENT,
-		                            gtk.MESSAGE_INFO,
-		                            gtk.BUTTONS_OK,
+			dialog = Gtk.MessageDialog(
+		                            self._application.window,
+		                            Gtk.DialogFlags.DESTROY_WITH_PARENT,
+		                            Gtk.MessageType.INFO,
+		                            Gtk.ButtonsType.OK,
 		                            _("This widget has no configuration dialog.")
 		                        )
 			dialog.run()
@@ -117,11 +117,11 @@ class DefaultToolbar(ToolbarFactory):
 		return result
 
 
-class BookmarkButton(gtk.ToolButton):
+class BookmarkButton(Gtk.ToolButton):
 	"""Bookmark toolbar button"""
 
 	def __init__(self, application, name, config):
-		gtk.ToolButton.__init__(self)
+		super(BookmarkButton, self).__init__()
 
 		self._name = name
 		self._config = config
@@ -160,11 +160,11 @@ class BookmarkButton(gtk.ToolButton):
 			active_object.change_path(self._path)
 
 
-class BookmarksButton(gtk.ToolButton):
+class BookmarksButton(Gtk.ToolButton):
 	"""Toolbar control used to popup bookmarks menu"""
 
 	def __init__(self, application, name, config):
-		gtk.ToolButton.__init__(self)
+		super(BookmarksButton, self).__init__()
 
 		# store parameters locally
 		self._name = name
@@ -189,7 +189,7 @@ class HomeFolderButton(BookmarkButton):
 	"""Home folder toolbar button"""
 
 	def __init__(self, application, name, config):
-		BookmarkButton.__init__(self, application, name, config)
+		super(HomeFolderButton, self).__init__(application, name, config)
 
 		self._path = user.home
 
@@ -203,11 +203,11 @@ class HomeFolderButton(BookmarkButton):
 		self.set_icon_name('user-home')
 
 
-class ParentDirectoryButton(gtk.ToolButton):
+class ParentDirectoryButton(Gtk.ToolButton):
 	"""Go to parent directory toolbar button"""
 
 	def __init__(self, application, name, config):
-		gtk.ToolButton.__init__(self)
+		super(ParentDirectoryButton, self).__init__()
 
 		self._name = name
 		self._config = config
@@ -227,18 +227,18 @@ class ParentDirectoryButton(gtk.ToolButton):
 			active_object._parent_directory()
 
 
-class Separator(gtk.SeparatorToolItem):
+class Separator(Gtk.SeparatorToolItem):
 	"""Toolbar separator widget"""
 
 	def __init__(self, application, name, config):
-		gtk.SeparatorToolItem.__init__(self)
+		super(Separator, self).__init__()
 
 
-class BookmarkButton_Dialog(gtk.Dialog):
+class BookmarkButton_Dialog(Gtk.Dialog):
 	"""Configuration dialog for bookmark button"""
 
 	def __init__(self, application, name, config=None):
-		gtk.Dialog.__init__(self, parent=application)
+		super(BookmarkButton_Dialog, self).__init__(parent=application)
 
 		self._application = application
 
@@ -253,27 +253,27 @@ class BookmarkButton_Dialog(gtk.Dialog):
 		self.vbox.set_spacing(0)
 
 		# interface container
-		vbox = gtk.VBox(False, 5)
+		vbox = Gtk.VBox(False, 5)
 		vbox.set_border_width(5)
 
 		# create interface
-		vbox_name = gtk.VBox(False, 0)
+		vbox_name = Gtk.VBox(False, 0)
 
-		label_name = gtk.Label(_('Name:'))
+		label_name = Gtk.Label(_('Name:'))
 		label_name.set_alignment(0, 0.5)
 
-		entry_name = gtk.Entry()
+		entry_name = Gtk.Entry()
 		entry_name.set_editable(False)
 		entry_name.set_sensitive(False)
 		entry_name.set_text(name)
 
-		vbox_path = gtk.VBox(False, 0)
+		vbox_path = Gtk.VBox(False, 0)
 
-		label_path = gtk.Label(_('Path:'))
+		label_path = Gtk.Label(_('Path:'))
 		label_path.set_alignment(0, 0.5)
 
-		self._entry_path = gtk.Entry()
-		self._checkbox_show_label = gtk.CheckButton(_('Show label'))
+		self._entry_path = Gtk.Entry()
+		self._checkbox_show_label = Gtk.CheckButton(_('Show label'))
 
 		# load default values
 		if config is not None:
@@ -281,14 +281,14 @@ class BookmarkButton_Dialog(gtk.Dialog):
 			self._checkbox_show_label.set_active(config['show_label'] == 'True')
 
 		# create controls
-		button_save = gtk.Button(stock=gtk.STOCK_SAVE)
+		button_save = Gtk.Button(stock=Gtk.STOCK_SAVE)
 		button_save.set_can_default(True)
-		button_cancel = gtk.Button(stock=gtk.STOCK_CANCEL)
+		button_cancel = Gtk.Button(stock=Gtk.STOCK_CANCEL)
 
-		self.add_action_widget(button_cancel, gtk.RESPONSE_CANCEL)
-		self.add_action_widget(button_save, gtk.RESPONSE_ACCEPT)
+		self.add_action_widget(button_cancel, Gtk.ResponseType.CANCEL)
+		self.add_action_widget(button_save, Gtk.ResponseType.ACCEPT)
 
-		self.set_default_response(gtk.RESPONSE_ACCEPT)
+		self.set_default_response(Gtk.ResponseType.ACCEPT)
 
 		# pack interface
 		vbox_name.pack_start(label_name, False, False, 0)
@@ -312,7 +312,7 @@ class BookmarkButton_Dialog(gtk.Dialog):
 		# show dialog
 		code = self.run()
 
-		if code == gtk.RESPONSE_ACCEPT:
+		if code is Gtk.ResponseType.ACCEPT:
 			config = {
 			    'path': self._entry_path.get_text(),
 			    'show_label': self._checkbox_show_label.get_active()

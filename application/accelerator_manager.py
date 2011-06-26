@@ -1,4 +1,4 @@
-import gtk
+from gi.repository import Gtk
 
 
 class AcceleratorManager:
@@ -17,7 +17,7 @@ class AcceleratorManager:
 
 		label = ''
 		if accelerator is not None:
-			label = gtk.accelerator_name(*accelerator)
+			label = Gtk.accelerator_name(*accelerator)
 
 		# don't allow overwriting user's configuration unless strictly specified
 		if not self._config.has_option(section, name) \
@@ -34,9 +34,9 @@ class AcceleratorManager:
 		# try to load only if config has accelerator specified
 		if self._config.has_section(section) \
 		and self._config.has_option(section, name):
-			accelerator = gtk.accelerator_parse(self._config.get(section, name))
+			accelerator = Gtk.accelerator_parse(self._config.get(section, name))
 
-			if gtk.accelerator_valid(*accelerator):
+			if Gtk.accelerator_valid(*accelerator):
 				result = accelerator
 
 		return result

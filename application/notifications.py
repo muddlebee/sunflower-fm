@@ -1,6 +1,7 @@
 import os
 import pynotify
 
+
 class NotificationManager:
 	"""Notification manager provides OS specific notification
 	methods to plugins and operations.
@@ -8,7 +9,7 @@ class NotificationManager:
 
 	def __init__(self, application):
 		self._application = application
-
+		
 		# initialize OS notification system
 		pynotify.init('sunflower')
 

@@ -1,5 +1,6 @@
 import os
-import gtk
+
+from gi.repository import Gtk
 
 try:
 	import appindicator
@@ -19,7 +20,7 @@ class Indicator(object):
 
 	def __init__(self, parent):
 		self._parent = parent
-		self._menu = gtk.Menu()
+		self._menu = Gtk.Menu()
 		self._create_menu_items()
 
 		if self._parent.options.getboolean('main', 'hide_on_close'):
@@ -35,7 +36,7 @@ class Indicator(object):
 				self._indicator.set_attention_icon (self._icon_attention)
 				self._indicator.set_menu(self._menu)
 			else:
-				self._indicator = gtk.StatusIcon()
+				self._indicator = Gtk.StatusIcon()
 
 				self._indicator.set_from_file(os.path.join(self._icon_path, self._s_icon))
 				self._indicator.connect('activate', self._status_icon_activate)
@@ -66,7 +67,7 @@ class Indicator(object):
 														'label': _('_Quit'),
 														'type': 'image',
 														'callback': self._parent._destroy,
-														'stock': gtk.STOCK_QUIT,
+														'stock': Gtk.STOCK_QUIT,
 													}))
 
 		# separator
@@ -95,7 +96,7 @@ class Indicator(object):
 
 	def add_operation(self, widget, callback, data):
 		"""Add operation to operations menu"""
-		menu_item = gtk.MenuItem()
+		menu_item = Gtk.MenuItem()
 		menu_item.add(widget)
 
 		if callback is not None:
