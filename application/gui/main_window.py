@@ -512,7 +512,7 @@ class MainWindow(GObject.GObject):
 		self.menu_commands = menu_item_commands.get_submenu()
 
 		# create notebooks
-		hbox = Gtk.HBox(True, 4)
+		hbox = Gtk.HBox(homogeneous=True, spacing=4)
 
 		self.left_notebook = Gtk.Notebook()
 		self.left_notebook.set_scrollable(True)
@@ -532,7 +532,7 @@ class MainWindow(GObject.GObject):
 		hbox.pack_start(self.right_notebook, True, True, 0)
 
 		# command line prompt
-		self.command_entry_bar = Gtk.HBox(False, 0)
+		self.command_entry_bar = Gtk.HBox(homogeneous=False, spacing=0)
 
 		self.path_label = Gtk.Label()
 		self.path_label.set_alignment(1, 0.5)
@@ -566,7 +566,7 @@ class MainWindow(GObject.GObject):
 						not self.options.getboolean('main', 'show_command_entry')
 					)
 		# command buttons bar
-		self.command_bar = Gtk.HBox(True, 0)
+		self.command_bar = Gtk.HBox(homogeneous=True, spacing=0)
 
 		buttons = (
 				(_('Refresh'), _('Reload active item list'), self._command_reload),
@@ -598,15 +598,14 @@ class MainWindow(GObject.GObject):
 					)
 
 		# pack UI
-		vbox = Gtk.VBox(False, 0)
-		vbox.pack_start(menu_bar, expand=False, fill=False, padding=0)
-		vbox.pack_start(self.toolbar_manager.get_toolbar(), expand=False, fill=False, padding=0)
+		vbox = Gtk.VBox(homogeneous=False, spacing=0)
+		vbox.pack_start(menu_bar, False, False, 0)
+		vbox.pack_start(self.toolbar_manager.get_toolbar(), False, False, 0)
 
-		vbox2 = Gtk.VBox(False, 4)
-		vbox2.set_border_width(3)
-		vbox2.pack_start(hbox, expand=True, fill=True, padding=0)
-		vbox2.pack_start(self.command_entry_bar, expand=False, fill=False, padding=0)
-		vbox2.pack_start(self.command_bar, expand=False, fill=False, padding=0)
+		vbox2 = Gtk.VBox(homogeneous=False, spacing=4, border_width=3)
+		vbox2.pack_start(hbox, True, True, 0)
+		vbox2.pack_start(self.command_entry_bar, False, False, 0)
+		vbox2.pack_start(self.command_bar, False, False, 0)
 
 		vbox.pack_start(vbox2, True, True, 0)
 		self.window.add(vbox)
@@ -663,11 +662,11 @@ class MainWindow(GObject.GObject):
 		if self.options.getboolean('main', 'add_home'):
 			bookmark = Gtk.ImageMenuItem()
 			image = Gtk.Image()
-			image.set_from_icon_name('user-home', Gtk.ICON_SIZE_MENU)
+			image.set_from_icon_name('user-home', Gtk.IconSize.MENU)
 
 			bookmark.set_image(image)
 			bookmark.set_always_show_image(True)
-			bookmark.set_label(label=_('Home directory'))
+			bookmark.set_label(_('Home directory'))
 			bookmark.set_data('path', os.path.expanduser('~/'))
 			bookmark.connect('activate', self._handle_bookmarks_click)
 
@@ -681,11 +680,11 @@ class MainWindow(GObject.GObject):
 
 			bookmark = Gtk.ImageMenuItem()
 			image = Gtk.Image()
-			image.set_from_icon_name('folder', Gtk.ICON_SIZE_MENU)
+			image.set_from_icon_name('folder', Gtk.IconSize.MENU)
 
 			bookmark.set_image(image)
 			bookmark.set_always_show_image(True)
-			bookmark.set_label(label=data[0])
+			bookmark.set_label(data[0])
 			bookmark.set_data('path', os.path.expanduser(data[1]))
 			bookmark.connect('activate', self._handle_bookmarks_click)
 
@@ -764,7 +763,7 @@ class MainWindow(GObject.GObject):
 			self.menu_tools.append(separator)
 
 		# create option for editing tools
-		edit_tools = Gtk.ImageMenuItem(stock_id=Gtk.STOCK_PREFERENCES)
+		edit_tools = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_PREFERENCES, None)
 		edit_tools.set_label(_('_Edit tools'))
 		edit_tools.connect('activate', self.preferences_window._show, 'tools')
 		self.menu_tools.append(edit_tools)
@@ -1005,7 +1004,7 @@ class MainWindow(GObject.GObject):
 		"""Dynamically load plugins"""
 		# get plugin list
 		list_ = self._get_plugin_list()
-
+		
 		# list of enabled plugins
 		plugins_to_load = self.options.get('main', 'plugins').split(',')
 
@@ -1013,22 +1012,22 @@ class MainWindow(GObject.GObject):
 		list_ = filter(lambda file_: file_ in plugins_to_load, list_)
 
 		for file_ in list_:
-			try:
+#			try:
 				# import module
-				__import__('plugins.{0}'.format(file_))
-				plugin = sys.modules['plugins.{0}'.format(file_)]
+			__import__('plugins.{0}'.format(file_))
+			plugin = sys.modules['plugins.{0}'.format(file_)]
 
-				# call module register_plugin method
-				if hasattr(plugin, 'register_plugin'):
-					plugin.register_plugin(self)
+			# call module register_plugin method
+			if hasattr(plugin, 'register_plugin'):
+				plugin.register_plugin(self)
 
-			except Exception as error:
-				print 'Error: Unable to load plugin "{0}": {1}'.format(file_, error)
+#			except Exception as error:
+#				print 'Error: Unable to load plugin "{0}": {1}'.format(file_, error)
 
 				# in case plugin is protected, complain and exit
-				if file_ in self.protected_plugins:
-					print '\nFatal error! Failed to load required plugin, exiting!'
-					sys.exit(3)
+#				if file_ in self.protected_plugins:
+#					print '\nFatal error! Failed to load required plugin, exiting!'
+#					sys.exit(3)
 
 	def _load_translation(self):
 		"""Load translation and install global functions"""
@@ -1187,7 +1186,7 @@ class MainWindow(GObject.GObject):
 
 	def _save_window_position(self):
 		"""Save window position to config"""
-		state = self.window.get_state()
+		state = self.window.window.get_state()
 		window_state = 0
 
 		if state & Gdk.WindowState.FULLSCREEN:
@@ -1214,8 +1213,8 @@ class MainWindow(GObject.GObject):
 
 	def _restore_window_position(self):
 		"""Restore window position from config string"""
-		self.parse_geometry(self.options.get('main', 'window'))
-		self._geometry = self.get_size() + self.get_position()
+		self.window.parse_geometry(self.options.get('main', 'window'))
+		self._geometry = self.window.get_size() + self.window.get_position()
 
 		# restore window state
 		window_state = self.options.getint('main', 'window_state')
@@ -2043,16 +2042,16 @@ class MainWindow(GObject.GObject):
 		self.plugin_classes[name] = plugin_class
 
 		# create menu item and add it
-		menu_item = Gtk.MenuItem(title)
-		menu_item.set_data('name', name)
-		menu_item.set_data('class', plugin_class)
-		menu_item.connect('activate', self._handle_new_tab_click)
+		item = Gtk.MenuItem(label=title)
+		item.set_data('name', name)
+		item.set_data('class', plugin_class)
+		item.connect('activate', self._handle_new_tab_click)
 
-		menu_item.show()
+		item.show_all()
 
 		# add menu item
 		menu = self.menu_manager.get_item_by_name('new_tab').get_submenu()
-		menu.append(menu_item)
+		menu.append(item)
 
 		# import class to globals
 		globals()[plugin_class.__name__] = plugin_class
