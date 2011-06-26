@@ -55,6 +55,7 @@ class MainWindow(GObject.GObject):
 		self.window = Gtk.Window(type=Gtk.WindowType.TOPLEVEL)
 
 		self._geometry = None
+		self._active_object = None
 
 		# load translations
 		self._load_translation()
@@ -518,14 +519,14 @@ class MainWindow(GObject.GObject):
 		self.left_notebook.set_scrollable(True)
 		self.left_notebook.connect('focus-in-event', self._transfer_focus)
 		self.left_notebook.connect('page-added', self._page_added)
-		self.left_notebook.connect('switch-page', self._page_switched)
+#		self.left_notebook.connect('switch-page', self._page_switched)
 		self.left_notebook.set_group_id(0)
 
 		self.right_notebook = Gtk.Notebook()
 		self.right_notebook.set_scrollable(True)
 		self.right_notebook.connect('focus-in-event', self._transfer_focus)
 		self.right_notebook.connect('page-added', self._page_added)
-		self.right_notebook.connect('switch-page', self._page_switched)
+#		self.right_notebook.connect('switch-page', self._page_switched)
 		self.right_notebook.set_group_id(0)
 
 		hbox.pack_start(self.left_notebook, True, True, 0)
@@ -875,7 +876,7 @@ class MainWindow(GObject.GObject):
 	def _handle_configure_event(self, widget, event):
 		"""Handle window resizing"""
 		if self.window.get_state() == 0:
-			self._geometry = self.get_size() + self.get_position()
+			self._geometry = self.window.get_size() + self.window.get_position()
 
 	def _handle_window_state_event(self, widget, event):
 		"""Handle window state change"""
@@ -1005,6 +1006,8 @@ class MainWindow(GObject.GObject):
 		# get plugin list
 		list_ = self._get_plugin_list()
 		
+		return 
+	
 		# list of enabled plugins
 		plugins_to_load = self.options.get('main', 'plugins').split(',')
 
@@ -1207,9 +1210,11 @@ class MainWindow(GObject.GObject):
 	def _save_active_notebook(self):
 		"""Save active notebook to config"""
 		object = self.get_active_object()
-		is_left = object._notebook is self.left_notebook
-
-		self.options.set('main', 'active_notebook', (1, 0)[is_left])
+		
+		if object is not None:
+			# save active notebook
+			is_left = object._notebook is self.left_notebook
+			self.options.set('main', 'active_notebook', (1, 0)[is_left])
 
 	def _restore_window_position(self):
 		"""Restore window position from config string"""
@@ -1490,34 +1495,38 @@ class MainWindow(GObject.GObject):
 
 	def run(self):
 		"""Start application"""
-		DefaultList = self.plugin_classes['file_list']
+		from plugins.dummy_module import DummyPlugin
+		self.create_tab(self.left_notebook, DummyPlugin)
+		self.create_tab(self.right_notebook, DummyPlugin)
 		
-		if self.arguments is not None and self.arguments.dont_load_tabs:
+#		DefaultList = self.plugin_classes['file_list']
+		
+#		if self.arguments is not None and self.arguments.dont_load_tabs:
 			# if specified tab list is empty, create default
-			if self.arguments.left_tabs is None:
-				self.create_tab(self.left_notebook, DefaultList)
-
-			if self.arguments.right_tabs is None:
-				self.create_tab(self.right_notebook, DefaultList)
-
-		else:
+#			if self.arguments.left_tabs is None:
+#				self.create_tab(self.left_notebook, DefaultList)
+#
+#			if self.arguments.right_tabs is None:
+#				self.create_tab(self.right_notebook, DefaultList)
+#
+#		else:
 			# load tabs in the left notebook
-			if not self.load_tabs(self.left_notebook, 'left_notebook'):
-				self.create_tab(self.left_notebook, DefaultList)
+#			if not self.load_tabs(self.left_notebook, 'left_notebook'):
+#				self.create_tab(self.left_notebook, DefaultList)
 
 			# load tabs in the right notebook
-			if not self.load_tabs(self.right_notebook, 'right_notebook'):
-				self.create_tab(self.right_notebook, DefaultList)
+#			if not self.load_tabs(self.right_notebook, 'right_notebook'):
+#				self.create_tab(self.right_notebook, DefaultList)
 
 		# create additional tabs
-		if self.arguments is not None:
-			if self.arguments.left_tabs is not None:
-				for path in self.arguments.left_tabs:
-					self.create_tab(self.left_notebook, DefaultList, path)
-
-			if self.arguments.right_tabs is not None:
-				for path in self.arguments.right_tabs:
-					self.create_tab(self.right_notebook, DefaultList, path)
+#		if self.arguments is not None:
+#			if self.arguments.left_tabs is not None:
+#				for path in self.arguments.left_tabs:
+#					self.create_tab(self.left_notebook, DefaultList, path)
+#
+#			if self.arguments.right_tabs is not None:
+#				for path in self.arguments.right_tabs:
+#					self.create_tab(self.right_notebook, DefaultList, path)
 
 		# focus active notebook
 		active_notebook_index = self.options.getint('main', 'active_notebook')
@@ -1726,7 +1735,7 @@ class MainWindow(GObject.GObject):
 
 	def save_accel_map(self, path):
 		"""Save menu accelerator map"""
-		Gtk.accel_map_save(path)
+		Gtk.AccelMap.save(path)
 
 	def load_accel_map(self, path):
 		"""Load menu accelerator map"""
@@ -1758,7 +1767,7 @@ class MainWindow(GObject.GObject):
 				)
 
 			for path, key, mask in accel_map:
-				Gtk.accel_map_change_entry(path, Gdk.keyval_from_name(key), mask, True)
+				Gtk.AccelMap.change_entry(path, Gdk.keyval_from_name(key), mask, True)
 
 	def save_config(self):
 		"""Save configuration to file"""
