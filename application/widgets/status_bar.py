@@ -1,11 +1,11 @@
-import gtk
+from gi.repository import Gtk
 
 
-class StatusBar(gtk.HBox):
+class StatusBar(Gtk.HBox):
 	"""Plugin status bar"""
 
 	def __init__(self):
-		gtk.HBox.__init__(self, False, 15)
+		super(StatusBar, self).__init__(False, 15)
 
 		self.set_border_width(1)
 		self.set_property('no-show-all', True)
@@ -14,7 +14,7 @@ class StatusBar(gtk.HBox):
 		self._labels = {}
 
 		# create default label
-		self._label = gtk.Label()
+		self._label = Gtk.Label()
 		self._label.set_use_markup(True)
 		self._label.set_alignment(0, 0.5)
 		self._label.show()
@@ -34,17 +34,17 @@ class StatusBar(gtk.HBox):
 
 	def add_group_with_icon(self, name, icon_name, value=''):
 		"""Add status bar group with icon"""
-		icon = gtk.Image()
-		icon.set_from_icon_name(icon_name, gtk.ICON_SIZE_MENU)
+		icon = Gtk.Image()
+		icon.set_from_icon_name(icon_name, Gtk.IconSize.MENU)
 		icon.show()
 
-		label = gtk.Label(value)
+		label = Gtk.Label(value)
 		label.set_use_markup(True)
 		label.set_alignment(0, 0.5)
 		label.show()
 
 		# pack group
-		hbox = gtk.HBox(False, 3)
+		hbox = Gtk.HBox(False, 3)
 		hbox.show()
 
 		hbox.pack_start(icon, False, False, 0)

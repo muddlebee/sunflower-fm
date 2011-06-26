@@ -1,6 +1,7 @@
 import os
-import gtk
 import gnomevfs
+
+from gi.repository import GObject, Gtk
 
 try:
 	# try to import module
@@ -11,7 +12,7 @@ except:
 	USE_FACTORY = False
 
 
-class ThumbnailView(gtk.Window):
+class ThumbnailView(GObject.GObject):
 	"""Load and display images from Gnome thumbnail factory storage.
 
 	Idea is to create one object and then update thumbnail image as
@@ -19,21 +20,25 @@ class ThumbnailView(gtk.Window):
 	them cached.
 
 	"""
+	
+	__gtype_name__ = 'Sunflower_ThumbnailView'
 
 	def __init__(self, parent, size=None):
-		gtk.Window.__init__(self, gtk.WINDOW_POPUP)
-
-		self.set_keep_above(True)
-		self.set_resizable(False)
-
-		# create image preview
-		self._image = gtk.Image()
-		self._image.show()
-		self.add(self._image)
+		super(ThumbnailView, self).__init__()
 
 		# store parameters locally
 		self._parent = parent
 		self._thumbnail_size = size
+		
+		# create window
+		self.window = Gtk.Window(type=Gtk.WindowType.POPUP)
+		self.window.set_keep_above(True)
+		self.window.set_resizable(False)
+
+		# create image preview
+		self._image = Gtk.Image()
+		self._image.show()
+		self.window.add(self._image)
 
 		# create thumbnail factory
 		if USE_FACTORY:
@@ -64,7 +69,7 @@ class ThumbnailView(gtk.Window):
 		# check for existing thumbnail
 		thumbnail_file = self._factory.lookup(uri, 0)
 		if thumbnail_file and os.path.isfile(thumbnail_file):
-			result = gtk.gdk.pixbuf_new_from_file(thumbnail_file)
+			result = Gtk.gdk.pixbuf_new_from_file(thumbnail_file)
 
 		# create thumbnail
 		elif self.can_have_thumbnail(uri):
@@ -92,7 +97,7 @@ class ThumbnailView(gtk.Window):
 
 		# no pixbuf was found, show missing image
 		else:
-			self._image.set_from_icon_name('gtk-missing-image', gtk.ICON_SIZE_DIALOG)
+			self._image.set_from_icon_name('Gtk-missing-image', Gtk.IconSize.DIALOG)
 
 	def move(self, left, top):
 		"""Move thumbnail window"""
@@ -102,4 +107,4 @@ class ThumbnailView(gtk.Window):
 		if top + height > screen.get_height():
 			top = screen.get_height() - height - 5
 
-		gtk.Window.move(self, left, top)
+		Gtk.Window.move(self, left, top)

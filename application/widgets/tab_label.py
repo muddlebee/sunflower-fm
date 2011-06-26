@@ -1,33 +1,33 @@
-import gtk
-import pango
+from gi.repository import Gtk, Pango
 
-class TabLabel(gtk.HBox):
+
+class TabLabel(Gtk.HBox):
 	"""Tab label wrapper class"""
 
 	def __init__(self, application, parent):
-		gtk.HBox.__init__(self, False, 0)
+		super(TabLabel, self).__init__(False, 0)
 
 		self._application = application
 		self._parent = parent
 
 		# create interface
-		self._label = gtk.Label()
+		self._label = Gtk.Label()
 		self._label.set_max_width_chars(20)
-		self._label.set_ellipsize(pango.ELLIPSIZE_END)
+		self._label.set_ellipsize(Pango.EllipsizeMode.END)
 
-		image = gtk.Image()
-		image.set_from_stock(gtk.STOCK_CLOSE, gtk.ICON_SIZE_MENU)
-		image_width, image_height = gtk.icon_size_lookup(gtk.ICON_SIZE_MENU)
+		image = Gtk.Image()
+		image.set_from_stock(Gtk.STOCK_CLOSE, Gtk.IconSize.MENU)
+		image_width, image_height = Gtk.icon_size_lookup(Gtk.IconSize.MENU)
 		image.show()
 
-		style = gtk.RcStyle()
+		style = Gtk.RcStyle()
 		style.xthickness = 0
 		style.ythickness = 0
 
-		self._button = gtk.Button()
+		self._button = Gtk.Button()
 		self._button.set_focus_on_click(False)
 		self._button.add(image)
-		self._button.set_relief(gtk.RELIEF_NONE)
+		self._button.set_relief(Gtk.ReliefStyle.NONE)
 		self._button.modify_style(style)
 		self._button.connect('clicked', self._close_tab)
 		self._button.set_property('no-show-all', True)

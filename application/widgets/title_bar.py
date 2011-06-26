@@ -1,19 +1,17 @@
-import gtk
-import pango
-
 from math import pi
+from gi.repository import Gtk, Pango
 
 
-class TitleBar(gtk.HBox):
+class TitleBar(Gtk.HBox):
 	"""Title bar wrapper class"""
 
 	def __init__(self, application):
-		gtk.HBox.__init__(self, False, 1)
+		super(TitleBar, self).__init__(False, 1)
 
 		self._application = application
 		self._radius = 3
 		self._control_count = 0
-		self._state = gtk.STATE_NORMAL
+		self._state = Gtk.StateType.NORMAL
 		self._ubuntu_coloring = self._application.options.getboolean('main', 'ubuntu_coloring')
 
 		# configure title bar
@@ -23,18 +21,18 @@ class TitleBar(gtk.HBox):
 		self.connect('expose-event', self.__expose_event)
 
 		# top folder icon as default
-		self._icon = gtk.Image()
+		self._icon = Gtk.Image()
 
 		# create title box
-		vbox = gtk.VBox(False, 1)
+		vbox = Gtk.VBox(False, 1)
 
-		self._title_label = gtk.Label()
+		self._title_label = Gtk.Label()
 		self._title_label.set_alignment(0, 0.5)
 		self._title_label.set_use_markup(True)
-		self._title_label.set_ellipsize(pango.ELLIPSIZE_MIDDLE)
+		self._title_label.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
 
-		font = pango.FontDescription('8')
-		self._subtitle_label = gtk.Label()
+		font = Pango.FontDescription('8')
+		self._subtitle_label = Gtk.Label()
 		self._subtitle_label.set_alignment(0, 0.5)
 		self._subtitle_label.set_use_markup(False)
 		self._subtitle_label.modify_font(font)
@@ -48,25 +46,25 @@ class TitleBar(gtk.HBox):
 
 	def __get_colors(self, normal_style=False):
 		"""Get copy of the style for current state"""
-		if self._state is gtk.STATE_NORMAL or normal_style:
+		if self._state is Gtk.StateType.NORMAL or normal_style:
 			# normal state
 			style = self._application.left_notebook.get_style().copy()
-			background = style.bg[gtk.STATE_NORMAL]
-			foreground = style.fg[gtk.STATE_NORMAL]
+			background = style.bg[Gtk.StateType.NORMAL]
+			foreground = style.fg[Gtk.StateType.NORMAL]
 
 		else:
 			# selected state
 			if self._ubuntu_coloring:
 				# ubuntu coloring method
 				style = self._application._menu_item_tools.get_style().copy()
-				background = style.bg[gtk.STATE_NORMAL]
-				foreground = style.fg[gtk.STATE_NORMAL]
+				background = style.bg[Gtk.StateType.NORMAL]
+				foreground = style.fg[Gtk.StateType.NORMAL]
 
 			else:
 				# normal coloring method
 				style = self._application.left_notebook.get_style().copy()
-				background = style.bg[gtk.STATE_SELECTED]
-				foreground = style.fg[gtk.STATE_SELECTED]
+				background = style.bg[Gtk.StateType.SELECTED]
+				foreground = style.fg[Gtk.StateType.SELECTED]
 
 		return background, foreground
 
@@ -108,7 +106,7 @@ class TitleBar(gtk.HBox):
 		context.fill()
 
 		# draw focus if needed
-		if self._state is not gtk.STATE_NORMAL:
+		if self._state is not Gtk.StateType.NORMAL:
 			color = self.__get_colors()[0]
 			context.set_source_rgb(
 								color.red_float,
@@ -155,8 +153,8 @@ class TitleBar(gtk.HBox):
 		color = self.__get_colors()[1]
 
 		# apply text color to labels
-		self._title_label.modify_fg(gtk.STATE_NORMAL, color)
-		self._subtitle_label.modify_fg(gtk.STATE_NORMAL, color)
+		self._title_label.modify_fg(Gtk.StateType.NORMAL, color)
+		self._subtitle_label.modify_fg(Gtk.StateType.NORMAL, color)
 
 	def add_control(self, widget):
 		"""Add button control"""
@@ -186,7 +184,7 @@ class TitleBar(gtk.HBox):
 
 	def set_icon_from_name(self, icon_name):
 		"""Set icon from specified name"""
-		self._icon.set_from_icon_name(icon_name, gtk.ICON_SIZE_LARGE_TOOLBAR)
+		self._icon.set_from_icon_name(icon_name, Gtk.IconSize.LARGE_TOOLBAR)
 
 	def apply_settings(self):
 		"""Method called when system applies new settings"""
