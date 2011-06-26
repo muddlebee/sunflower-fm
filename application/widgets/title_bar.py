@@ -6,7 +6,7 @@ class TitleBar(Gtk.HBox):
 	"""Title bar wrapper class"""
 
 	def __init__(self, application):
-		super(TitleBar, self).__init__(False, 1)
+		super(TitleBar, self).__init__(homogeneous=False, spacing=1, border_width=4)
 
 		self._application = application
 		self._radius = 3
@@ -14,17 +14,15 @@ class TitleBar(Gtk.HBox):
 		self._state = Gtk.StateType.NORMAL
 		self._ubuntu_coloring = self._application.options.getboolean('main', 'ubuntu_coloring')
 
-		# configure title bar
-		self.set_border_width(4)
-
 		# connect signals
-		self.connect('expose-event', self.__expose_event)
+		# TODO: Bug in GI doesn't allow getting colors and custom painting
+#		self.connect('expose-event', self.__expose_event)
 
 		# top folder icon as default
 		self._icon = Gtk.Image()
 
 		# create title box
-		vbox = Gtk.VBox(False, 1)
+		vbox = Gtk.VBox(homogeneous=False, spacing=1)
 
 		self._title_label = Gtk.Label()
 		self._title_label.set_alignment(0, 0.5)
@@ -164,6 +162,8 @@ class TitleBar(Gtk.HBox):
 	def set_state(self, state):
 		"""Set GTK control state for title bar"""
 		self._state = state
+		
+		return
 
 		# apply new colors
 		self.queue_draw()
@@ -171,6 +171,8 @@ class TitleBar(Gtk.HBox):
 
 	def set_style(self, style):
 		"""Set drawing style"""
+		return 
+	
 		self._style = style
 		self.queue_draw()
 
@@ -190,6 +192,7 @@ class TitleBar(Gtk.HBox):
 		"""Method called when system applies new settings"""
 		self._ubuntu_coloring = self._application.options.getboolean('main', 'ubuntu_coloring')
 
+		return 
 		# apply new colors
 		self.queue_draw()
 		self.__apply_text_color()
