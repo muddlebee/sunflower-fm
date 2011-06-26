@@ -10,14 +10,12 @@ class PluginsOptions(SettingsPage):
 
 		# create interface
 		container = Gtk.ScrolledWindow()
-		container.set_policy(Gtk.POLICY_AUTOMATIC, Gtk.POLICY_ALWAYS)
-		container.set_shadow_type(Gtk.SHADOW_IN)
+		container.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.ALWAYS)
+		container.set_shadow_type(Gtk.ShadowType.IN)
 
 		# create list box
 		self._plugins = Gtk.ListStore(bool, str)
-
-		self._list = Gtk.TreeView()
-		self._list.set_model(self._plugins)
+		self._list = Gtk.TreeView(model=self._plugins)
 		self._list.set_rules_hint(True)
 
 		# create and configure cell renderers
@@ -36,7 +34,7 @@ class PluginsOptions(SettingsPage):
 		self._list.append_column(col_name)
 
 		container.add(self._list)
-		self.pack_start(container, True, True, 0)
+		self.vbox.pack_start(container, True, True, 0)
 
 	def _toggle_plugin(self, cell, path):
 		"""Handle changing plugin state"""

@@ -58,4 +58,4 @@ class AcceleratorOptions(SettingsPage):
 		# pack interface
 		container.add(self._list)
 
-		self.pack_start(container, True, True, 0)
+		self.vbox.pack_start(container, True, True, 0)

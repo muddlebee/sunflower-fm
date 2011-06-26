@@ -20,8 +20,7 @@ class DisplayOptions(SettingsPage):
 
 		# main window options
 		label_main_window = Gtk.Label(_('Main window'))
-		vbox_main_window = Gtk.VBox(False, 0)
-		vbox_main_window.set_border_width(5)
+		vbox_main_window = Gtk.VBox(homogeneous=False, spacing=0, border_width=5)
 
 		self._checkbox_hide_on_close = Gtk.CheckButton(_('Hide main window on close'))
 		self._checkbox_show_toolbar = Gtk.CheckButton(_('Show toolbar'))
@@ -35,8 +34,7 @@ class DisplayOptions(SettingsPage):
 
 		# tab options
 		label_tabs = Gtk.Label(_('Tabs'))
-		vbox_tabs = Gtk.VBox(False, 0)
-		vbox_tabs.set_border_width(5)
+		vbox_tabs = Gtk.VBox(homogeneous=False, spacing=0, border_width=5)
 
 		self._checkbox_focus_new_tab = Gtk.CheckButton(_('Focus new tab after opening'))
 		self._checkbox_button_relief = Gtk.CheckButton(_('Show normal button relief'))
@@ -53,7 +51,7 @@ class DisplayOptions(SettingsPage):
 		self._checkbox_ubuntu_coloring.connect('toggled', self._parent.enable_save)
 
 		# status bar
-		table = Gtk.Table(2, 2, False)
+		table = Gtk.Table(n_rows=2, n_columns=2, homogeneous=False)
 		table.set_col_spacing(0, 5)
 		table.set_row_spacings(5)
 
@@ -67,9 +65,9 @@ class DisplayOptions(SettingsPage):
 
 		cell_status_bar = Gtk.CellRendererText()
 
-		self._combobox_status_bar = Gtk.ComboBox(list_status_bar)
+		self._combobox_status_bar = Gtk.ComboBox(model=list_status_bar)
 		self._combobox_status_bar.connect('changed', self._parent.enable_save)
-		self._combobox_status_bar.pack_start(cell_status_bar)
+		self._combobox_status_bar.pack_start(cell_status_bar, True)
 		self._combobox_status_bar.add_attribute(cell_status_bar, 'text', 0)
 
 		# expand tabs
@@ -83,15 +81,14 @@ class DisplayOptions(SettingsPage):
 
 		cell_expand_tab = Gtk.CellRendererText()
 
-		self._combobox_expand_tabs = Gtk.ComboBox(list_expand_tab)
+		self._combobox_expand_tabs = Gtk.ComboBox(model=list_expand_tab)
 		self._combobox_expand_tabs.connect('changed', self._parent.enable_save)
-		self._combobox_expand_tabs.pack_start(cell_expand_tab)
+		self._combobox_expand_tabs.pack_start(cell_expand_tab, True)
 		self._combobox_expand_tabs.add_attribute(cell_expand_tab, 'text', 0)
 
 		# operation options
 		label_other = Gtk.Label(_('Other'))
-		vbox_other = Gtk.VBox(False, 0)
-		vbox_other.set_border_width(5)
+		vbox_other = Gtk.VBox(homogeneous=False, spacing=0, border_width=5)
 
 		self._checkbox_hide_window_on_minimize = Gtk.CheckButton(_('Hide operation window on minimize'))
 		self._checkbox_human_readable_size = Gtk.CheckButton(_('Show sizes in human readable format'))
@@ -100,11 +97,11 @@ class DisplayOptions(SettingsPage):
 		self._checkbox_human_readable_size.connect('toggled', self._parent.enable_save)
 
 		# pack UI
-		table.attach(label_status_bar, 0, 1, 0, 1, xoptions=Gtk.FILL)
-		table.attach(self._combobox_status_bar, 1, 2, 0, 1, xoptions=Gtk.FILL)
+		table.attach(label_status_bar, 0, 1, 0, 1, xoptions=Gtk.AttachOptions.FILL)
+		table.attach(self._combobox_status_bar, 1, 2, 0, 1, xoptions=Gtk.AttachOptions.FILL)
 
-		table.attach(label_expand_tab, 0, 1, 1, 2, xoptions=Gtk.FILL)
-		table.attach(self._combobox_expand_tabs, 1, 2, 1, 2, xoptions=Gtk.FILL)
+		table.attach(label_expand_tab, 0, 1, 1, 2, xoptions=Gtk.AttachOptions.FILL)
+		table.attach(self._combobox_expand_tabs, 1, 2, 1, 2, xoptions=Gtk.AttachOptions.FILL)
 
 		vbox_main_window.pack_start(self._checkbox_hide_on_close, False, False, 0)
 		vbox_main_window.pack_start(self._checkbox_show_toolbar, False, False, 0)
@@ -126,7 +123,7 @@ class DisplayOptions(SettingsPage):
 		notebook.append_page(vbox_tabs, label_tabs)
 		notebook.append_page(vbox_other, label_other)
 
-		self.pack_start(notebook, True, True, 0)
+		self.vbox.pack_start(notebook, True, True, 0)
 
 	def _load_options(self):
 		"""Load display options"""

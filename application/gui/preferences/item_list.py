@@ -15,11 +15,8 @@ class ItemListOptions(SettingsPage):
 		label_operation = Gtk.Label(_('Operation'))
 
 		# vertical boxes
-		vbox_look_and_feel = Gtk.VBox(False, 0)
-		vbox_operation = Gtk.VBox(False, 0)
-
-		vbox_look_and_feel.set_border_width(5)
-		vbox_operation.set_border_width(5)
+		vbox_look_and_feel = Gtk.VBox(homogeneous=False, spacing=0, border_width=5)
+		vbox_operation = Gtk.VBox(homogeneous=False, spacing=0, border_width=5)
 
 		# file list options
 		self._checkbox_row_hinting = Gtk.CheckButton(_('Row hinting'))
@@ -37,21 +34,21 @@ class ItemListOptions(SettingsPage):
 		self._checkbox_media_preview.connect('toggled', self._parent.enable_save)
 
 		# grid lines
-		hbox_grid_lines = Gtk.HBox(False, 5)
+		hbox_grid_lines = Gtk.HBox(homogeneous=False, spacing=5)
 		label_grid_lines = Gtk.Label(_('Show grid lines:'))
 		label_grid_lines.set_alignment(0, 0.5)
 
 		list_grid_lines = Gtk.ListStore(str, int)
-		list_grid_lines.append((_('None'), Gtk.TREE_VIEW_GRID_LINES_NONE))
-		list_grid_lines.append((_('Horizontal'), Gtk.TREE_VIEW_GRID_LINES_HORIZONTAL))
-		list_grid_lines.append((_('Vertical'), Gtk.TREE_VIEW_GRID_LINES_VERTICAL))
-		list_grid_lines.append((_('Both'), Gtk.TREE_VIEW_GRID_LINES_BOTH))
+		list_grid_lines.append((_('None'), Gtk.TreeViewGridLines.NONE))
+		list_grid_lines.append((_('Horizontal'), Gtk.TreeViewGridLines.HORIZONTAL))
+		list_grid_lines.append((_('Vertical'), Gtk.TreeViewGridLines.VERTICAL))
+		list_grid_lines.append((_('Both'), Gtk.TreeViewGridLines.BOTH))
 
 		cell_grid_lines = Gtk.CellRendererText()
 
-		self._combobox_grid_lines = Gtk.ComboBox(list_grid_lines)
+		self._combobox_grid_lines = Gtk.ComboBox(model=list_grid_lines)
 		self._combobox_grid_lines.connect('changed', self._parent.enable_save)
-		self._combobox_grid_lines.pack_start(cell_grid_lines)
+		self._combobox_grid_lines.pack_start(cell_grid_lines, True)
 		self._combobox_grid_lines.add_attribute(cell_grid_lines, 'text', 0)
 
 		# quick search
@@ -66,9 +63,9 @@ class ItemListOptions(SettingsPage):
 		self._checkbox_alt.connect('toggled', self._parent.enable_save)
 		self._checkbox_shift.connect('toggled', self._parent.enable_save)
 
-		hbox_quick_search = Gtk.HBox(False, 5)
+		hbox_quick_search = Gtk.HBox(homogeneous=False, spacing=5)
 
-		vbox_time_format = Gtk.VBox(False, 0)
+		vbox_time_format = Gtk.VBox(homogeneous=False, spacing=0)
 		label_time_format = Gtk.Label(_('Date format:'))
 		label_time_format.set_alignment(0, 0.5)
 		self._entry_time_format = Gtk.Entry()
@@ -104,7 +101,7 @@ class ItemListOptions(SettingsPage):
 		notebook.append_page(vbox_look_and_feel, label_look_and_feel)
 		notebook.append_page(vbox_operation, label_operation)
 
-		self.pack_start(notebook, True, True, 0)
+		self.vbox.pack_start(notebook, True, True, 0)
 
 	def _vim_bindings_toggled(self, widget, data=None):
 		"""Handle toggling VIM bindings on or off"""

@@ -13,7 +13,7 @@ class TerminalOptions(SettingsPage):
 		self._checkbox_scrollbars_visible.connect('toggled', self._parent.enable_save)
 
 		# pack interface
-		self.pack_start(self._checkbox_scrollbars_visible, False, False, 0)
+		self.vbox.pack_start(self._checkbox_scrollbars_visible, False, False, 0)
 
 	def _load_options(self):
 		"""Load terminal tab options"""

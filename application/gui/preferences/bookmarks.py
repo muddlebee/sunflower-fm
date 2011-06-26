@@ -18,23 +18,21 @@ class BookmarksOptions(SettingsPage):
 
 		# create list box
 		container = Gtk.ScrolledWindow()
-		container.set_policy(Gtk.POLICY_AUTOMATIC, Gtk.POLICY_ALWAYS)
-		container.set_shadow_type(Gtk.SHADOW_IN)
+		container.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.ALWAYS)
+		container.set_shadow_type(Gtk.ShadowType.IN)
 
 		self._bookmarks = Gtk.ListStore(str, str)
-
-		self._list = Gtk.TreeView()
-		self._list.set_model(self._bookmarks)
+		self._list = Gtk.TreeView(model=self._bookmarks)
 		self._list.set_rules_hint(True)
 
 		cell_title = Gtk.CellRendererText()
 		cell_title.set_property('editable', True)
-		cell_title.set_property('mode', Gtk.CELL_RENDERER_MODE_EDITABLE)
+		cell_title.set_property('mode', Gtk.CellRendererMode.EDITABLE)
 		cell_title.connect('edited', self._edited_bookmark, 0)
 
 		cell_command = Gtk.CellRendererText()
 		cell_command.set_property('editable', True)
-		cell_command.set_property('mode', Gtk.CELL_RENDERER_MODE_EDITABLE)
+		cell_command.set_property('mode', Gtk.CellRendererMode.EDITABLE)
 		cell_command.connect('edited', self._edited_bookmark, 1)
 
 		col_title = Gtk.TreeViewColumn(_('Title'), cell_title, text=0)
@@ -51,7 +49,7 @@ class BookmarksOptions(SettingsPage):
 		container.add(self._list)
 
 		# create controls
-		button_box = Gtk.HBox(False, 5)
+		button_box = Gtk.HBox(homogeneous=False, spacing=5)
 
 		button_add = Gtk.Button(stock=Gtk.STOCK_ADD)
 		button_add.connect('clicked', self._add_bookmark)
@@ -60,7 +58,7 @@ class BookmarksOptions(SettingsPage):
 		button_delete.connect('clicked', self._delete_bookmark)
 
 		image_up = Gtk.Image()
-		image_up.set_from_stock(Gtk.STOCK_GO_UP, Gtk.ICON_SIZE_BUTTON)
+		image_up.set_from_stock(Gtk.STOCK_GO_UP, Gtk.IconSize.BUTTON)
 
 		button_move_up = Gtk.Button(label=None)
 		button_move_up.add(image_up)
@@ -68,7 +66,7 @@ class BookmarksOptions(SettingsPage):
 		button_move_up.connect('clicked', self._move_bookmark, -1)
 
 		image_down = Gtk.Image()
-		image_down.set_from_stock(Gtk.STOCK_GO_DOWN, Gtk.ICON_SIZE_BUTTON)
+		image_down.set_from_stock(Gtk.STOCK_GO_DOWN, Gtk.IconSize.BUTTON)
 
 		button_move_down = Gtk.Button(label=None)
 		button_move_down.add(image_down)
@@ -82,14 +80,14 @@ class BookmarksOptions(SettingsPage):
 		button_box.pack_end(button_move_up, False, False, 0)
 
 		# pack checkboxes
-		vbox = Gtk.VBox(False, 0)
+		vbox = Gtk.VBox(homogeneous=False, spacing=0)
 
 		vbox.pack_start(self._checkbox_show_mount_points, False, False, 0)
 		vbox.pack_start(self._checkbox_add_home, False, False, 0)
 
-		self.pack_start(vbox, False, False, 0)
-		self.pack_start(container, True, True, 0)
-		self.pack_start(button_box, False, False, 0)
+		self.vbox.pack_start(vbox, False, False, 0)
+		self.vbox.pack_start(container, True, True, 0)
+		self.vbox.pack_start(button_box, False, False, 0)
 
 	def _add_bookmark(self, widget, data=None):
 		"""Add new bookmark to the store"""

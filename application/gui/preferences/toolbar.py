@@ -12,12 +12,11 @@ class ToolbarOptions(SettingsPage):
 
 		# create list box
 		container = Gtk.ScrolledWindow()
-		container.set_policy(Gtk.POLICY_AUTOMATIC, Gtk.POLICY_ALWAYS)
-		container.set_shadow_type(Gtk.SHADOW_IN)
+		container.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.ALWAYS)
+		container.set_shadow_type(Gtk.ShadowType.IN)
 
 		self._store = Gtk.ListStore(str, str, str, str)
-		self._list = Gtk.TreeView()
-		self._list.set_model(self._store)
+		self._list = Gtk.TreeView(model=self._store)
 
 		cell_icon = Gtk.CellRendererPixbuf()
 		cell_name = Gtk.CellRendererText()
@@ -46,7 +45,7 @@ class ToolbarOptions(SettingsPage):
 		container.add(self._list)
 
 		# create controls
-		button_box = Gtk.HBox(False, 5)
+		button_box = Gtk.HBox(homogeneous=False, spacing=5)
 
 		button_add = Gtk.Button(stock=Gtk.STOCK_ADD)
 		button_add.connect('clicked', self._add_widget)
@@ -58,7 +57,7 @@ class ToolbarOptions(SettingsPage):
 		button_edit.connect('clicked', self._edit_widget)
 
 		image_up = Gtk.Image()
-		image_up.set_from_stock(Gtk.STOCK_GO_UP, Gtk.ICON_SIZE_BUTTON)
+		image_up.set_from_stock(Gtk.STOCK_GO_UP, Gtk.IconSize.BUTTON)
 
 		button_move_up = Gtk.Button(label=None)
 		button_move_up.add(image_up)
@@ -66,7 +65,7 @@ class ToolbarOptions(SettingsPage):
 		button_move_up.connect('clicked', self._move_widget, -1)
 
 		image_down = Gtk.Image()
-		image_down.set_from_stock(Gtk.STOCK_GO_DOWN, Gtk.ICON_SIZE_BUTTON)
+		image_down.set_from_stock(Gtk.STOCK_GO_DOWN, Gtk.IconSize.BUTTON)
 
 		button_move_down = Gtk.Button(label=None)
 		button_move_down.add(image_down)
@@ -80,8 +79,8 @@ class ToolbarOptions(SettingsPage):
 		button_box.pack_end(button_move_down, False, False, 0)
 		button_box.pack_end(button_move_up, False, False, 0)
 
-		self.pack_start(container, True, True, 0)
-		self.pack_start(button_box, False, False, 0)
+		self.vbox.pack_start(container, True, True, 0)
+		self.vbox.pack_start(button_box, False, False, 0)
 
 	def _add_widget(self, widget, data=None):
 		"""Show dialog for creating toolbar widget"""

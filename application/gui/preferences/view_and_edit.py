@@ -9,22 +9,20 @@ class ViewEditOptions(SettingsPage):
 		SettingsPage.__init__(self, parent, application, 'view_and_edit', _('View & Edit'))
 
 		# viewer options
-		frame_view = Gtk.Frame(_('View'))
+		frame_view = Gtk.Frame(label=_('View'))
 
 		label_not_implemented = Gtk.Label('This option is not implemented yet.')
 		label_not_implemented.set_sensitive(False)
 
 		# editor options
-		frame_edit = Gtk.Frame(_('Edit'))
+		frame_edit = Gtk.Frame(label=_('Edit'))
 
-		vbox_edit = Gtk.VBox(False, 0)
-		vbox_edit.set_border_width(5)
+		vbox_edit = Gtk.VBox(homogeneous=False, spacing=0, border_width=5)
 
 		# external options
 		radio_external = Gtk.RadioButton(label=_('Use external editor'))
 
-		vbox_external = Gtk.VBox(False, 0)
-		vbox_external.set_border_width(10)
+		vbox_external = Gtk.VBox(homogeneous=False, spacing=0, border_width=10)
 
 		label_editor = Gtk.Label(_('Command line:'))
 		label_editor.set_alignment(0, 0.5)
@@ -42,8 +40,7 @@ class ViewEditOptions(SettingsPage):
 								)
 		radio_internal.set_sensitive(False)
 
-		vbox_internal = Gtk.VBox(False, 0)
-		vbox_internal.set_border_width(5)
+		vbox_internal = Gtk.VBox(homogeneous=False, spacing=0, border_width=5)
 
 		# pack UI
 		vbox_external.pack_start(label_editor, False, False, 0)
@@ -58,8 +55,8 @@ class ViewEditOptions(SettingsPage):
 		frame_view.add(label_not_implemented)
 		frame_edit.add(vbox_edit)
 
-		self.pack_start(frame_view, False, False, 0)
-		self.pack_start(frame_edit, False, False, 0)
+		self.vbox.pack_start(frame_view, False, False, 0)
+		self.vbox.pack_start(frame_edit, False, False, 0)
 
 	def _load_options(self):
 		"""Load options"""
