@@ -1,5 +1,4 @@
-import gtk
-
+from gi.repository import Gtk
 from widgets.settings_page import SettingsPage
 
 
@@ -12,20 +11,20 @@ class ToolbarOptions(SettingsPage):
 		self._toolbar_manager = self._application.toolbar_manager
 
 		# create list box
-		container = gtk.ScrolledWindow()
-		container.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
-		container.set_shadow_type(gtk.SHADOW_IN)
+		container = Gtk.ScrolledWindow()
+		container.set_policy(Gtk.POLICY_AUTOMATIC, Gtk.POLICY_ALWAYS)
+		container.set_shadow_type(Gtk.SHADOW_IN)
 
-		self._store = gtk.ListStore(str, str, str, str)
-		self._list = gtk.TreeView()
+		self._store = Gtk.ListStore(str, str, str, str)
+		self._list = Gtk.TreeView()
 		self._list.set_model(self._store)
 
-		cell_icon = gtk.CellRendererPixbuf()
-		cell_name = gtk.CellRendererText()
-		cell_type = gtk.CellRendererText()
+		cell_icon = Gtk.CellRendererPixbuf()
+		cell_name = Gtk.CellRendererText()
+		cell_type = Gtk.CellRendererText()
 
 		# create name column
-		col_name = gtk.TreeViewColumn(_('Name'))
+		col_name = Gtk.TreeViewColumn(_('Name'))
 		col_name.set_min_width(200)
 		col_name.set_resizable(True)
 
@@ -36,7 +35,7 @@ class ToolbarOptions(SettingsPage):
 		col_name.add_attribute(cell_name, 'text', 0)
 
 		# create type column
-		col_type = gtk.TreeViewColumn(_('Type'), cell_type, markup=1)
+		col_type = Gtk.TreeViewColumn(_('Type'), cell_type, markup=1)
 		col_type.set_resizable(True)
 		col_type.set_expand(True)
 
@@ -47,34 +46,34 @@ class ToolbarOptions(SettingsPage):
 		container.add(self._list)
 
 		# create controls
-		button_box = gtk.HBox(False, 5)
+		button_box = Gtk.HBox(False, 5)
 
-		button_add = gtk.Button(stock=gtk.STOCK_ADD)
+		button_add = Gtk.Button(stock=Gtk.STOCK_ADD)
 		button_add.connect('clicked', self._add_widget)
 
-		button_delete = gtk.Button(stock=gtk.STOCK_DELETE)
+		button_delete = Gtk.Button(stock=Gtk.STOCK_DELETE)
 		button_delete.connect('clicked', self._delete_widget)
 
-		button_edit = gtk.Button(stock=gtk.STOCK_EDIT)
+		button_edit = Gtk.Button(stock=Gtk.STOCK_EDIT)
 		button_edit.connect('clicked', self._edit_widget)
 
-		image_up = gtk.Image()
-		image_up.set_from_stock(gtk.STOCK_GO_UP, gtk.ICON_SIZE_BUTTON)
+		image_up = Gtk.Image()
+		image_up.set_from_stock(Gtk.STOCK_GO_UP, Gtk.ICON_SIZE_BUTTON)
 
-		button_move_up = gtk.Button(label=None)
+		button_move_up = Gtk.Button(label=None)
 		button_move_up.add(image_up)
 		button_move_up.set_tooltip_text(_('Move Up'))
 		button_move_up.connect('clicked', self._move_widget, -1)
 
-		image_down = gtk.Image()
-		image_down.set_from_stock(gtk.STOCK_GO_DOWN, gtk.ICON_SIZE_BUTTON)
+		image_down = Gtk.Image()
+		image_down.set_from_stock(Gtk.STOCK_GO_DOWN, Gtk.ICON_SIZE_BUTTON)
 
-		button_move_down = gtk.Button(label=None)
+		button_move_down = Gtk.Button(label=None)
 		button_move_down.add(image_down)
 		button_move_down.set_tooltip_text(_('Move Down'))
 		button_move_down.connect('clicked', self._move_widget, 1)
 
-		# pack ui
+		# pack UI
 		button_box.pack_start(button_add, False, False, 0)
 		button_box.pack_start(button_delete, False, False, 0)
 		button_box.pack_start(button_edit, False, False, 0)

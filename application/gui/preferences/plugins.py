@@ -1,5 +1,4 @@
-import gtk
-
+from gi.repository import Gtk
 from widgets.settings_page import SettingsPage
 
 
@@ -10,26 +9,26 @@ class PluginsOptions(SettingsPage):
 		SettingsPage.__init__(self, parent, application, 'plugins', _('Plugins'))
 
 		# create interface
-		container = gtk.ScrolledWindow()
-		container.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
-		container.set_shadow_type(gtk.SHADOW_IN)
+		container = Gtk.ScrolledWindow()
+		container.set_policy(Gtk.POLICY_AUTOMATIC, Gtk.POLICY_ALWAYS)
+		container.set_shadow_type(Gtk.SHADOW_IN)
 
 		# create list box
-		self._plugins = gtk.ListStore(bool, str)
+		self._plugins = Gtk.ListStore(bool, str)
 
-		self._list = gtk.TreeView()
+		self._list = Gtk.TreeView()
 		self._list.set_model(self._plugins)
 		self._list.set_rules_hint(True)
 
 		# create and configure cell renderers
-		cell_active = gtk.CellRendererToggle()
+		cell_active = Gtk.CellRendererToggle()
 		cell_active.connect('toggled', self._toggle_plugin)
-		cell_name = gtk.CellRendererText()
+		cell_name = Gtk.CellRendererText()
 
 		# create and pack columns
-		col_active = gtk.TreeViewColumn(_('Active'), cell_active, active=0)
+		col_active = Gtk.TreeViewColumn(_('Active'), cell_active, active=0)
 
-		col_name = gtk.TreeViewColumn(_('Plugin file'), cell_name, text=1)
+		col_name = Gtk.TreeViewColumn(_('Plugin file'), cell_name, text=1)
 		col_name.set_resizable(True)
 		col_name.set_expand(True)
 
@@ -52,11 +51,11 @@ class PluginsOptions(SettingsPage):
 
 		else:
 			# plugin is protected, show appropriate message
-			dialog = gtk.MessageDialog(
+			dialog = Gtk.MessageDialog(
 									self._application,
-									gtk.DIALOG_DESTROY_WITH_PARENT,
-									gtk.MESSAGE_INFO,
-									gtk.BUTTONS_OK,
+									Gtk.DIALOG_DESTROY_WITH_PARENT,
+									Gtk.MESSAGE_INFO,
+									Gtk.BUTTONS_OK,
 									_(
 										"Specified plugin ('{0}') is required for "
 										"normal program operation and therefore can "

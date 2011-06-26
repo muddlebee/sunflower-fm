@@ -1,5 +1,4 @@
-import gtk
-
+from gi.repository import Gtk
 from widgets.settings_page import SettingsPage
 
 
@@ -9,26 +8,26 @@ class ItemListOptions(SettingsPage):
 	def __init__(self, parent, application):
 		SettingsPage.__init__(self, parent, application, 'item_list', _('Item List'))
 
-		notebook = gtk.Notebook()
+		notebook = Gtk.Notebook()
 
 		# create frames
-		label_look_and_feel = gtk.Label(_('Look & feel'))
-		label_operation = gtk.Label(_('Operation'))
+		label_look_and_feel = Gtk.Label(_('Look & feel'))
+		label_operation = Gtk.Label(_('Operation'))
 
 		# vertical boxes
-		vbox_look_and_feel = gtk.VBox(False, 0)
-		vbox_operation = gtk.VBox(False, 0)
+		vbox_look_and_feel = Gtk.VBox(False, 0)
+		vbox_operation = Gtk.VBox(False, 0)
 
 		vbox_look_and_feel.set_border_width(5)
 		vbox_operation.set_border_width(5)
 
 		# file list options
-		self._checkbox_row_hinting = gtk.CheckButton(_('Row hinting'))
-		self._checkbox_show_hidden = gtk.CheckButton(_('Show hidden files'))
-		self._checkbox_case_sensitive = gtk.CheckButton(_('Case sensitive item sorting'))
-		self._checkbox_right_click = gtk.CheckButton(_('Right click selects items'))
-		self._checkbox_show_headers = gtk.CheckButton(_('Show list headers'))
-		self._checkbox_media_preview = gtk.CheckButton(_('Fast media preview'))
+		self._checkbox_row_hinting = Gtk.CheckButton(_('Row hinting'))
+		self._checkbox_show_hidden = Gtk.CheckButton(_('Show hidden files'))
+		self._checkbox_case_sensitive = Gtk.CheckButton(_('Case sensitive item sorting'))
+		self._checkbox_right_click = Gtk.CheckButton(_('Right click selects items'))
+		self._checkbox_show_headers = Gtk.CheckButton(_('Show list headers'))
+		self._checkbox_media_preview = Gtk.CheckButton(_('Fast media preview'))
 
 		self._checkbox_row_hinting.connect('toggled', self._parent.enable_save)
 		self._checkbox_show_hidden.connect('toggled', self._parent.enable_save)
@@ -38,41 +37,41 @@ class ItemListOptions(SettingsPage):
 		self._checkbox_media_preview.connect('toggled', self._parent.enable_save)
 
 		# grid lines
-		hbox_grid_lines = gtk.HBox(False, 5)
-		label_grid_lines = gtk.Label(_('Show grid lines:'))
+		hbox_grid_lines = Gtk.HBox(False, 5)
+		label_grid_lines = Gtk.Label(_('Show grid lines:'))
 		label_grid_lines.set_alignment(0, 0.5)
 
-		list_grid_lines = gtk.ListStore(str, int)
-		list_grid_lines.append((_('None'), gtk.TREE_VIEW_GRID_LINES_NONE))
-		list_grid_lines.append((_('Horizontal'), gtk.TREE_VIEW_GRID_LINES_HORIZONTAL))
-		list_grid_lines.append((_('Vertical'), gtk.TREE_VIEW_GRID_LINES_VERTICAL))
-		list_grid_lines.append((_('Both'), gtk.TREE_VIEW_GRID_LINES_BOTH))
+		list_grid_lines = Gtk.ListStore(str, int)
+		list_grid_lines.append((_('None'), Gtk.TREE_VIEW_GRID_LINES_NONE))
+		list_grid_lines.append((_('Horizontal'), Gtk.TREE_VIEW_GRID_LINES_HORIZONTAL))
+		list_grid_lines.append((_('Vertical'), Gtk.TREE_VIEW_GRID_LINES_VERTICAL))
+		list_grid_lines.append((_('Both'), Gtk.TREE_VIEW_GRID_LINES_BOTH))
 
-		cell_grid_lines = gtk.CellRendererText()
+		cell_grid_lines = Gtk.CellRendererText()
 
-		self._combobox_grid_lines = gtk.ComboBox(list_grid_lines)
+		self._combobox_grid_lines = Gtk.ComboBox(list_grid_lines)
 		self._combobox_grid_lines.connect('changed', self._parent.enable_save)
 		self._combobox_grid_lines.pack_start(cell_grid_lines)
 		self._combobox_grid_lines.add_attribute(cell_grid_lines, 'text', 0)
 
 		# quick search
-		label_quick_search = gtk.Label(_('Quick search combination:'))
+		label_quick_search = Gtk.Label(_('Quick search combination:'))
 		label_quick_search.set_alignment(0, 0.5)
 		label_quick_search.set_use_markup(True)
-		self._checkbox_control = gtk.CheckButton(_('Control'))
-		self._checkbox_alt = gtk.CheckButton(_('Alt'))
-		self._checkbox_shift = gtk.CheckButton(_('Shift'))
+		self._checkbox_control = Gtk.CheckButton(_('Control'))
+		self._checkbox_alt = Gtk.CheckButton(_('Alt'))
+		self._checkbox_shift = Gtk.CheckButton(_('Shift'))
 
 		self._checkbox_control.connect('toggled', self._parent.enable_save)
 		self._checkbox_alt.connect('toggled', self._parent.enable_save)
 		self._checkbox_shift.connect('toggled', self._parent.enable_save)
 
-		hbox_quick_search = gtk.HBox(False, 5)
+		hbox_quick_search = Gtk.HBox(False, 5)
 
-		vbox_time_format = gtk.VBox(False, 0)
-		label_time_format = gtk.Label(_('Date format:'))
+		vbox_time_format = Gtk.VBox(False, 0)
+		label_time_format = Gtk.Label(_('Date format:'))
 		label_time_format.set_alignment(0, 0.5)
-		self._entry_time_format = gtk.Entry()
+		self._entry_time_format = Gtk.Entry()
 		self._entry_time_format.set_tooltip_markup(
 								'<b>' + _('Time is formed using the format located at:') + '</b>\n'
 								'http://docs.python.org/library/time.html#time.strftime'
@@ -112,11 +111,11 @@ class ItemListOptions(SettingsPage):
 		if widget.get_active() \
 		and self._application.options.get('main', 'search_modifier') == '000':
 			# user can't have this quick search combination with VIM bindings
-			dialog = gtk.MessageDialog(
+			dialog = Gtk.MessageDialog(
 									self._application,
-									gtk.DIALOG_DESTROY_WITH_PARENT,
-									gtk.MESSAGE_WARNING,
-									gtk.BUTTONS_OK,
+									Gtk.DIALOG_DESTROY_WITH_PARENT,
+									Gtk.MESSAGE_WARNING,
+									Gtk.BUTTONS_OK,
 									_(
 										'Quick search settings are in conflict with VIM '
 										'navigation style. To resolve this issue your '

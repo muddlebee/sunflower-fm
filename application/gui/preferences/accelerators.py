@@ -1,5 +1,4 @@
-import gtk
-
+from gi.repository import Gtk
 from widgets.settings_page import SettingsPage
 
 COL_NAME			= 0
@@ -16,27 +15,27 @@ class AcceleratorOptions(SettingsPage):
 		SettingsPage.__init__(self, parent, application, 'accelerators', _('Keybindings'))
 
 		# create list box
-		container = gtk.ScrolledWindow()
-		container.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
-		container.set_shadow_type(gtk.SHADOW_IN)
+		container = Gtk.ScrolledWindow()
+		container.set_policy(Gtk.POLICY_AUTOMATIC, Gtk.POLICY_ALWAYS)
+		container.set_shadow_type(Gtk.SHADOW_IN)
 
-		self._accels = gtk.TreeStore(str, int, int, int, int)
+		self._accels = Gtk.TreeStore(str, int, int, int, int)
 
-		self._list = gtk.TreeView()
+		self._list = Gtk.TreeView()
 		self._list.set_model(self._accels)
 		self._list.set_rules_hint(True)
 
 		# create and configure cell renderers
-		cell_name = gtk.CellRendererText()
-		cell_primary = gtk.CellRendererAccel()
-		cell_secondary = gtk.CellRendererAccel()
+		cell_name = Gtk.CellRendererText()
+		cell_primary = Gtk.CellRendererAccel()
+		cell_secondary = Gtk.CellRendererAccel()
 
 		# create and pack columns
-		col_name = gtk.TreeViewColumn('Test', cell_name, text=COL_NAME)
+		col_name = Gtk.TreeViewColumn('Test', cell_name, text=COL_NAME)
 		col_name.set_min_width(200)
 		col_name.set_resizable(True)
 
-		col_primary = gtk.TreeViewColumn(
+		col_primary = Gtk.TreeViewColumn(
 									'Test',
 									cell_primary,
 									accel_key=COL_PRIMARY_KEY,
@@ -44,7 +43,7 @@ class AcceleratorOptions(SettingsPage):
 								)
 		col_primary.set_min_width(100)
 
-		col_secondary = gtk.TreeViewColumn(
+		col_secondary = Gtk.TreeViewColumn(
 									'Test',
 									cell_secondary,
 									accel_key=COL_SECONDARY_KEY,

@@ -1,5 +1,4 @@
-import gtk
-
+from gi.repository import Gtk
 from widgets.settings_page import SettingsPage
 
 
@@ -10,7 +9,7 @@ class TerminalOptions(SettingsPage):
 		SettingsPage.__init__(self, parent, application, 'terminal', _('Terminal'))
 
 		# create interface
-		self._checkbox_scrollbars_visible = gtk.CheckButton(_('Show scrollbars when needed'))
+		self._checkbox_scrollbars_visible = Gtk.CheckButton(_('Show scrollbars when needed'))
 		self._checkbox_scrollbars_visible.connect('toggled', self._parent.enable_save)
 
 		# pack interface
