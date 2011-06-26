@@ -1,5 +1,4 @@
-import gtk
-
+from gi.repository import GObject, Gtk
 from gui.preferences.display import DisplayOptions
 from gui.preferences.item_list import ItemListOptions
 from gui.preferences.terminal import TerminalOptions
@@ -14,47 +13,52 @@ COL_NAME	= 0
 COL_WIDGET	= 1
 
 
-class PreferencesWindow(gtk.Window):
+class PreferencesWindow(GObject.GObject):
+	
+	__gtype_name__ = 'Sunflower_PreferencesWindow'
 
 	def __init__(self, parent):
-		gtk.Window.__init__(self, gtk.WINDOW_TOPLEVEL)
+		super(PreferencesWindow, self).__init__()
 
 		self._parent = parent
 		self._tab_names = {}
 
 		# configure self
-		self.connect('delete_event', self._hide)
-		self.set_title(_('Preferences'))
-		self.set_size_request(640, 500)
-		self.set_modal(True)
-		self.set_skip_taskbar_hint(True)
-		self.set_transient_for(parent)
-		self.set_wmclass('Sunflower', 'Sunflower')
+		self.window = Gtk.Window(type=Gtk.WindowType.TOPLEVEL)
+		self.window.set_title(_('Preferences'))
+		self.window.set_size_request(640, 500)
+		self.window.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
+		self.window.set_modal(True)
+		self.window.set_skip_taskbar_hint(True)
+		self.window.set_transient_for(self._parent.window)
+		self.window.set_wmclass('Sunflower', 'Sunflower')
+
+		self.window.connect('delete_event', self._hide)
 
 		# create GUI
-		vbox = gtk.VBox(False, 7)
+		vbox = Gtk.VBox(False, 7)
 		vbox.set_border_width(7)
 
-		hbox = gtk.HBox(False, 7)
+		hbox = Gtk.HBox(False, 7)
 
 		# create tab label container
-		label_container = gtk.ScrolledWindow()
-		label_container.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-		label_container.set_shadow_type(gtk.SHADOW_IN)
+		label_container = Gtk.ScrolledWindow()
+		label_container.set_policy(Gtk.POLICY_AUTOMATIC, Gtk.POLICY_AUTOMATIC)
+		label_container.set_shadow_type(Gtk.SHADOW_IN)
 		label_container.set_size_request(130, -1)
 
-		self._labels = gtk.ListStore(str, int)
-		self._tab_labels = gtk.TreeView(self._labels)
+		self._labels = Gtk.ListStore(str, int)
+		self._tab_labels = Gtk.TreeView(self._labels)
 
-		cell_label = gtk.CellRendererText()
-		col_label = gtk.TreeViewColumn(None, cell_label, text=COL_NAME)
+		cell_label = Gtk.CellRendererText()
+		col_label = Gtk.TreeViewColumn(None, cell_label, text=COL_NAME)
 
 		self._tab_labels.append_column(col_label)
 		self._tab_labels.set_headers_visible(False)
 		self._tab_labels.connect('cursor-changed', self._handle_cursor_change)
 
 		# create tabs
-		self._tabs = gtk.Notebook()
+		self._tabs = Gtk.Notebook()
 		self._tabs.set_show_tabs(False)
 		self._tabs.set_show_border(False)
 		self._tabs.connect('switch-page', self._handle_page_switch)
@@ -73,23 +77,23 @@ class PreferencesWindow(gtk.Window):
 		self._tab_labels.set_cursor((0,))
 
 		# create buttons
-		hbox_controls = gtk.HBox(False, 5)
+		hbox_controls = Gtk.HBox(False, 5)
 
-		btn_close = gtk.Button(stock=gtk.STOCK_CLOSE)
+		btn_close = Gtk.Button(stock=Gtk.STOCK_CLOSE)
 		btn_close.connect('clicked', self._hide)
 
-		self._button_save = gtk.Button(stock=gtk.STOCK_SAVE)
+		self._button_save = Gtk.Button(stock=Gtk.STOCK_SAVE)
 		self._button_save.connect('clicked', self._save_options)
 
-		btn_help = gtk.Button(stock=gtk.STOCK_HELP)
+		btn_help = Gtk.Button(stock=Gtk.STOCK_HELP)
 		btn_help.connect(
 					'clicked',
-					parent.goto_web,
+					self._parent.goto_web,
 					'code.google.com/p/sunflower-fm/wiki/WelcomePage?tm=6'
 				)
 
 		# restart label
-		self._label_restart = gtk.Label('<i>{0}</i>'.format(_('Program restart required!')))
+		self._label_restart = Gtk.Label('<i>{0}</i>'.format(_('Program restart required!')))
 		self._label_restart.set_alignment(0.5, 0.5)
 		self._label_restart.set_use_markup(True)
 		self._label_restart.set_property('no-show-all', True)
@@ -109,19 +113,19 @@ class PreferencesWindow(gtk.Window):
 		vbox.pack_start(hbox, True, True, 0)
 		vbox.pack_start(hbox_controls, False, False, 0)
 
-		self.add(vbox)
+		self.window.add(vbox)
 
 	def _show(self, widget, tab_name=None):
 		"""Show dialog and reload options"""
 		self._load_options()
-		self.show_all()
+		self.window.show_all()
 
 		if tab_name is not None and self._tab_names.has_key(tab_name):
 			self._tabs.set_current_page(self._tab_names[tab_name])
 
 	def _hide(self, widget, data=None):
 		"""Hide dialog"""
-		self.hide()
+		self.window.hide()
 		return True  # avoid destroying components
 
 	def _load_options(self):
