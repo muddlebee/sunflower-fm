@@ -519,15 +519,15 @@ class MainWindow(GObject.GObject):
 		self.left_notebook.set_scrollable(True)
 		self.left_notebook.connect('focus-in-event', self._transfer_focus)
 		self.left_notebook.connect('page-added', self._page_added)
-#		self.left_notebook.connect('switch-page', self._page_switched)
-		self.left_notebook.set_group_id(0)
+		self.left_notebook.connect('switch-page', self._page_switched)
+		self.left_notebook.set_group_name('plugins')
 
 		self.right_notebook = Gtk.Notebook()
 		self.right_notebook.set_scrollable(True)
 		self.right_notebook.connect('focus-in-event', self._transfer_focus)
 		self.right_notebook.connect('page-added', self._page_added)
-#		self.right_notebook.connect('switch-page', self._page_switched)
-		self.right_notebook.set_group_id(0)
+		self.right_notebook.connect('switch-page', self._page_switched)
+		self.right_notebook.set_group_name('plugins')
 
 		hbox.pack_start(self.left_notebook, True, True, 0)
 		hbox.pack_start(self.right_notebook, True, True, 0)
@@ -1189,7 +1189,7 @@ class MainWindow(GObject.GObject):
 
 	def _save_window_position(self):
 		"""Save window position to config"""
-		state = self.window.window.get_state()
+		state = self.window.get_state()
 		window_state = 0
 
 		if state & Gdk.WindowState.FULLSCREEN:
