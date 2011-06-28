@@ -165,7 +165,7 @@ class PluginBase(Gtk.VBox):
 
 		# activate accelerators
 		for group in self._accelerator_groups:
-			group.activate(self._parent)
+			group.activate(self._parent.window)
 
 	def _control_lost_focus(self, widget, data=None):
 		"""List focus out event"""
