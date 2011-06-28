@@ -128,12 +128,12 @@ class Terminal(PluginBase):
 		self._menu = Gtk.Menu()
 
 		# copy
-		self._menu_item_copy = Gtk.ImageMenuItem(stock_id=Gtk.STOCK_COPY)
+		self._menu_item_copy = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_COPY, None)
 		self._menu_item_copy.connect('activate', self._copy_selection)
 		self._menu.append(self._menu_item_copy)
 
 		# paste
-		self._menu_item_paste = Gtk.ImageMenuItem(stock_id=Gtk.STOCK_PASTE)
+		self._menu_item_paste = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_PASTE, None)
 		self._menu_item_paste.connect('activate', self._paste_selection)
 		self._menu.append(self._menu_item_paste)
 
