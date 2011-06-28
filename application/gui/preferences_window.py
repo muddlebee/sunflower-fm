@@ -59,7 +59,7 @@ class PreferencesWindow(GObject.GObject):
 		self._tabs = Gtk.Notebook()
 		self._tabs.set_show_tabs(False)
 		self._tabs.set_show_border(False)
-#		self._tabs.connect('switch-page', self._handle_page_switch)
+		self._tabs.connect('switch-page', self._handle_page_switch)
 
 		DisplayOptions(self, parent)
 		ItemListOptions(self, parent)
@@ -166,14 +166,14 @@ class PreferencesWindow(GObject.GObject):
 		if iter_ is not None:
 			new_tab = list_.get_value(iter_, COL_WIDGET)
 
-#			self._tabs.handler_block_by_func(self._handle_page_switch)
+			self._tabs.handler_block_by_func(self._handle_page_switch)
 			self._tabs.set_current_page(new_tab)
-#			self._tabs.handler_unblock_by_func(self._handle_page_switch)
+			self._tabs.handler_unblock_by_func(self._handle_page_switch)
 
 	def _handle_page_switch(self, widget, page, page_num, data=None):
 		"""Handle changing page without user interaction"""
 		self._tab_labels.handler_block_by_func(self._handle_cursor_change)
-		self._tab_labels.set_cursor((page_num,))
+#		self._tab_labels.set_cursor((page_num,))
 		self._tab_labels.handler_unblock_by_func(self._handle_cursor_change)
 
 	def enable_save(self, widget=None, show_restart=None):
