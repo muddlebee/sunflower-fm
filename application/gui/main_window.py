@@ -46,7 +46,7 @@ class MainWindow(gtk.Window):
 	version = {
 			'major': 0,
 			'minor': 1,
-			'build': 30,
+			'build': 31,
 			'stage': 'a'
 		}
 
@@ -66,6 +66,7 @@ class MainWindow(gtk.Window):
 		# containers
 		self.plugin_classes = {}
 		self.provider_classes = {}
+		self.archive_provider_classes = {}
 		self.rename_extension_classes = {}
 
 		# list of protected plugins
@@ -502,6 +503,7 @@ class MainWindow(gtk.Window):
 		# bookmarks menu
 		self.menu_bookmarks = gtk.Menu()
 		self.menu_bookmarks.connect('hide', self._handle_bookmarks_hide)
+		self.menu_bookmarks.set_accel_group(self.menu_manager.get_accel_group())
 
 		# mounts menu
 		mounts_image = gtk.Image()
@@ -975,10 +977,13 @@ class MainWindow(gtk.Window):
 			if hasattr(page, 'apply_media_preview_settings'):
 				page.apply_media_preview_settings()
 
-	def _set_active_object(self, object):
+	def _set_active_object(self, object_):
 		"""Set active object"""
-		if object is not None:
-			self._active_object = object
+		if object_ is not None:
+			self._active_object = object_
+
+			# set bookmarks target so accels could work
+			self.menu_bookmarks.set_data('list', object_)
 
 	def _load_history(self):
 		"""Load history file and populate the command list"""
@@ -1347,6 +1352,32 @@ class MainWindow(gtk.Window):
 
 		self.arguments = parser.parse_args()
 
+	def activate_bookmark(self, widget=None, index=1):
+		"""Activate bookmark by index"""
+		result = False
+		active_object = self.get_active_object()
+
+		# get path list
+		items = []
+
+		# add home if needed
+		if self.options.getboolean('main', 'add_home'):
+			items.append(user.home)
+
+		# read all bookmarks
+		bookmark_count = len(self.bookmark_options.options('bookmarks'))
+		for number in range(1, bookmark_count+1):
+			path = self.bookmark_options.get('bookmarks', 'b_{0}'.format(number)).split(';', 1)[1]
+			items.append(path)
+
+		# check if bookmark index and active object are valid
+		if index-1 < len(items) \
+		and hasattr(active_object, 'change_path'):
+			active_object.change_path(items[index-1])
+			result = True
+
+		return result
+
 	def show_bookmarks_menu(self, widget=None, notebook=None):
 		"""Position bookmarks menu properly and show it"""
 		button = None
@@ -1362,7 +1393,6 @@ class MainWindow(gtk.Window):
 		else:
 			# button called for menu
 			button = widget
-			self.menu_bookmarks.set_data('list', self.get_active_object())
 
 		if button is not None:
 			# disable color changing on tab title bar
@@ -1498,7 +1528,7 @@ class MainWindow(gtk.Window):
 	def run(self):
 		"""Start application"""
 		DefaultList = self.plugin_classes['file_list']
-		
+
 		if self.arguments is not None and self.arguments.dont_load_tabs:
 			# if specified tab list is empty, create default
 			if self.arguments.left_tabs is None:
@@ -2071,22 +2101,25 @@ class MainWindow(gtk.Window):
 		for protocol in ProviderClass.protocols:
 			self.provider_classes[protocol] = ProviderClass
 
+		for archive_type in ProviderClass.archives:
+			self.archive_provider_classes[archive_type] = ProviderClass
+
 	def register_toolbar_factory(self, FactoryClass):
 		"""Register and create toolbar widget factory"""
 		self.toolbar_manager.register_factory(FactoryClass)
-		
+
 	def register_rename_extension(self, name, ExtensionClass):
 		"""Register class to be used in advanced rename tool"""
 		if issubclass(ExtensionClass, RenameExtension) \
 		and not self.rename_extension_classes.has_key(name):
 			# register class
 			self.rename_extension_classes[name] = ExtensionClass
-			
+
 		else:
 			# report error to console
 			if self.rename_extension_classes.has_key(name):
 				print 'Error: Extension with name "{0}" is already registered!'
-				
+
 			if not issubclass(ExtensionClass, RenameExtension):
 				print 'Error: Invalid object class!'
 
@@ -2170,13 +2203,13 @@ class MainWindow(gtk.Window):
 		"""Show about window"""
 		window = AboutWindow(self)
 		window._show()
-		
+
 	def show_advanced_rename(self, widget, data=None):
 		"""Show advanced rename tool for active list"""
 		if len(self.rename_extension_classes) > 0 \
 		and issubclass(self._active_object.__class__, ItemList):
 			object = self.get_active_object()
-			
+
 			if issubclass(object.__class__, ItemList):
 				AdvancedRename(object, self)
 

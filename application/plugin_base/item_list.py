@@ -247,6 +247,22 @@ class ItemList(PluginBase):
 		group.set_accelerator('inherit_left_path', keyval('Right'), gtk.gdk.CONTROL_MASK)
 		group.set_accelerator('inherit_right_path', keyval('Left'), gtk.gdk.CONTROL_MASK)
 
+		# create bookmark accelerators
+		for number in range(1, 11):
+			group.add_method(
+						'bookmark_{0}'.format(number),
+						_("Go to '{0}'"),
+						self._parent.activate_bookmark,
+						number
+					)
+
+			key_number = number if number < 10 else 0
+			group.set_accelerator(
+						'bookmark_{0}'.format(number),
+						keyval(str(key_number)),
+						gtk.gdk.MOD1_MASK
+					)
+
 		# add accelerator group to the list
 		self._accelerator_groups.append(group)
 

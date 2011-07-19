@@ -1,15 +1,58 @@
+from collections import namedtuple
+
+
+FileInfo = namedtuple(
+				'FileInfo',
+				[
+					'size',  # file size
+					'mode',  # file access mode
+					'user_id',  # user id
+					'group_id',  # group id
+					'time_modify',  # time of last modification
+					'type',  # file type, constant from FileType class
+				])
+
+
+FileInfoExtended = namedtuple(
+				'FileInfo',
+				[
+					'size',  # file size
+					'mode',  # file access mode
+					'i_mode',  # inode protection mode
+					'user_id',  # user id
+					'group_id',  # group id
+					'time_access',  # time of last access
+					'time_modify',  # time of last modification
+					'time_create',  # time of file creation
+					'type',  # file type, constant from FileType class
+					'device',  # device inode resides on
+					'inode'  # inode number
+				])
+
+
+class FileType:
+	INVALID = -1
+	REGULAR = 0
+	DIRECTORY = 1
+	LINK = 2
+	SOCKET = 3
+	DEVICE_CHARACTER = 4
+	DEVICE_BLOCK = 5
+
+
 class Provider:
 	"""Abstract provider class used to manipulate items"""
 
 	is_local = True  # if provider handles local files
 	protocols = ()  # list of supported protocols
+	archives = ()  # list of supported archive types
 
 	def __init__(self, parent, path=None, selection=None):
 		self._parent = parent
 
 		self._path = path
 		self._selection = None
-		
+
 		# we need only existing items in selection list
 		if selection is not None:
 			self._selection = [item for item in selection if self.exists(item, path)]
@@ -54,7 +97,7 @@ class Provider:
 		"""Open path in specified mode and return its handle"""
 		pass
 
-	def get_stat(self, path, relative_to=None):
+	def get_stat(self, path, relative_to=None, extended=False):
 		"""Return file statistics"""
 		pass
 
@@ -108,7 +151,7 @@ class Provider:
 	def list_dir(self, path, relative_to=None):
 		"""Get directory list"""
 		pass
-	
+
 	def get_parent(self):
 		"""Return parent list"""
 		return self._parent
