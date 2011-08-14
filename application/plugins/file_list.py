@@ -742,7 +742,9 @@ class FileList(ItemList):
 
 		if not self._sort_sensitive and self._sort_column in (Column.NAME, Column.EXTENSION):
 			value1 = value1.lower()
-			value2 = value2.lower()
+
+			if value2 is not None:  # make sure we have extension to make lowercase
+				value2 = value2.lower()
 
 		item1 = (
 				reverse * list_.get_value(iter1, Column.IS_PARENT_DIR),
@@ -1535,10 +1537,27 @@ class LocalProvider(Provider):
 			real_source = os.path.join(relative_to, source)
 			real_destination = os.path.join(relative_to, destination)
 
-		os.rename(
-				os.path.join(self._parent.path, real_source),
-				os.path.join(self._parent.path, real_destination)
-				)
+		try:
+			os.rename(
+					os.path.join(self._parent.path, real_source),
+					os.path.join(self._parent.path, real_destination)
+					)
+
+		except OSError as error:
+			# rename failed, notify user
+			dialog = gtk.MessageDialog(
+									self._parent,
+									gtk.DIALOG_DESTROY_WITH_PARENT,
+									gtk.MESSAGE_ERROR,
+									gtk.BUTTONS_OK,
+									_(
+										'Unable to rename specified item. '
+										'Check if you have permission to access '
+										'specified path.\n\n{0}'
+									).format(error)
+								)
+			dialog.run()
+			dialog.destroy()
 
 	def list_dir(self, path, relative_to=None):
 		"""Get directory list"""
