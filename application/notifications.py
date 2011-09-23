@@ -1,7 +1,7 @@
 # coding:utf-8 vi:noet:ts=4
 
 import os
-import pynotify
+import platform.notify
 
 class NotificationManager:
 	"""Notification manager provides OS specific notification
@@ -12,7 +12,7 @@ class NotificationManager:
 		self._application = application
 
 		# initialize OS notification system
-		pynotify.init('sunflower')
+		platform.notify.init('sunflower')
 
 		# decide which icon to use
 		if self._application.icon_manager.has_icon('sunflower'):
@@ -33,7 +33,7 @@ class NotificationManager:
 			icon = self._default_icon
 
 		# create notification object
-		notification = pynotify.Notification(title, text, icon)
+		notification = platform.notify.Notification(title, text, icon)
 
 		# show notification
 		notification.show()
