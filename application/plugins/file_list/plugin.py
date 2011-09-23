@@ -1087,7 +1087,7 @@ class FileList(ItemList):
 	def _change_title_text(self, text=None):
 		"""Change title label text and add free space display"""
 		if text is None: text = self.path
-		stat = os.statvfs(self.path)
+		stat = filesystem.statvfs(self.path)
 
 		space_free = common.format_size(stat.f_bsize * stat.f_bavail)
 		space_total = common.format_size(stat.f_bsize * stat.f_blocks)
