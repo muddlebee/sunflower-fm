@@ -1627,7 +1627,7 @@ class MainWindow(gtk.Window):
 
 	def create_tab(self, notebook, plugin_class=None, path=None, sort_column=None, sort_ascending=None):
 		"""Safe create tab"""
-		if sort_column is not None and sort_column != '':
+		if sort_column is not None and sort_column.isdigit():
 			# create plugin object with sort parameters
 			new_tab = plugin_class(self, notebook, path, int(sort_column), bool(int(sort_ascending)))
 
