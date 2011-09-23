@@ -25,9 +25,14 @@ import os
 import sys
 import subprocess
 
+template = {
+		'linux2': 'python2.{0}',
+		'win32': 'python2.{0}.exe',
+		'darwin': 'python2.{0}',
+	}
+
 search_paths = os.environ["PATH"].split(os.pathsep)
-interpreter_list  = [ 'python2.{0}'.format( i ) for i in [ 9, 8, 7, 6 ] ]
-interpreter_list += [ 'python2.{0}.exe'.format( i ) for i in [ 9, 8, 7, 6 ] ]
+interpreter_list  = tuple(template[sys.platform].format(minor_version) for minor_version in xrange(6, 10))
 application_file = os.path.join(os.path.dirname(sys.argv[0]), 'application', 'main.py')
 
 def _can_execute(path):
