@@ -2,53 +2,58 @@
 
 import sys
 
-if 'win32' == sys.platform :
+if sys.platform == 'linux2':
+	# import linux modules
+	from gnomevfs import *
+	from os import statvfs
 
-	def mime_get_all_applications( mime_type ):
+elif sys.platform == 'win32':
+	# define methods for Windows
+
+	def mime_get_all_applications(mime_type):
 		pass
 
-	def mime_get_default_application( mime_type ):
+	def mime_get_default_application(mime_type):
 		pass
 
-	def get_mime_type( path ):
+	def get_mime_type(path):
 		pass
 
-	def is_executable_command_string( path ):
+	def is_executable_command_string(path):
 		pass
 
-	def mime_get_description( mime_type ):
+	def mime_get_description(mime_type):
 		pass
 
-	def statvfs( path ) :
-		class Stat( object ) :
-			def __init__( self ) :
+	def statvfs(path):
+		class Stat(object):
+			def __init__(self):
 				self.f_bsize  = 0
 				self.f_bavail = 0
 				self.f_blocks = 0
 		return Stat()
 
-elif 'darwin' == sys.platform :
+elif sys.platform == 'darwin':
+	# define methods for OS/X
 
-	def mime_get_all_applications( mime_type ):
+	def mime_get_all_applications(mime_type):
 		pass
 
-	def mime_get_default_application( mime_type ):
+	def mime_get_default_application(mime_type):
 		pass
 
-	def get_mime_type( path ):
+	def get_mime_type(path):
 		pass
 
-	def is_executable_command_string( path ):
+	def is_executable_command_string(path):
 		pass
 
-	def mime_get_description( mime_type ):
+	def mime_get_description(mime_type):
 		pass
 
 	from os import statvfs
 
-elif 'linux2' == sys.platform :
-	from gnomevfs import *
-	from os import statvfs
-else :
-	raise Exception( "Unknown platform." )
+else:
+	# unknown platform, stop executing
+	raise Exception("Unknown platform.")
 
