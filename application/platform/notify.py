@@ -1,5 +1,7 @@
 # coding:utf-8 vi:noet:ts=4
 
+import sys
+
 if 'win32' == sys.platform :
 
 	def init( app_name ):
