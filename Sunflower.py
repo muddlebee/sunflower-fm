@@ -26,7 +26,8 @@ import sys
 import subprocess
 
 search_paths = os.environ["PATH"].split(os.pathsep)
-interpreter_list = ('python2.9', 'python2.8', 'python2.7', 'python2.6')
+interpreter_list  = [ 'python2.{0}'.format( i ) for i in [ 9, 8, 7, 6 ] ]
+interpreter_list += [ 'python2.{0}.exe'.format( i ) for i in [ 9, 8, 7, 6 ] ]
 application_file = os.path.join(os.path.dirname(sys.argv[0]), 'application', 'main.py')
 
 def _can_execute(path):
