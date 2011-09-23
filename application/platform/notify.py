@@ -2,24 +2,29 @@
 
 import sys
 
-if 'win32' == sys.platform :
+if sys.platform == 'linux2':
+	# import linux native support
+	from pynotify import init, Notification
 
-	def init( app_name ):
+elif sys.platform == 'win32':
+	# define methods for Windows
+
+	def init(app_name):
 		pass
 
-	def Notification( title, text, icon ):
+	def Notification(title, text, icon):
 		pass
 
-elif 'darwin' == sys.platform :
+elif sys.platform == 'darwin':
+	# define methods for OS/X
 
-	def init( app_name ):
+	def init(app_name):
 		pass
 
-	def Notification( title, text, icon ):
+	def Notification(title, text, icon):
 		pass
 
-elif 'linux2' == sys.platform :
-	from pynotify import *
-else :
-	raise Exception( "Unknown platform." )
+else:
+	# unknown platform, stop executing
+	raise Exception("Unknown platform.")
 
