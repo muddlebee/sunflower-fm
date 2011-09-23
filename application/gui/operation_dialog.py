@@ -1,3 +1,5 @@
+# coding:utf-8 vi:noet:ts=4
+
 import gtk
 import pango
 import locale

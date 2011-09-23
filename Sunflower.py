@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding:utf-8 vi:noet:ts=4
 #
 #		Sunflower.py
 #

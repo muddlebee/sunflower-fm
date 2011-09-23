@@ -1,4 +1,4 @@
-# coding: utf-8
+# coding:utf-8 vi:noet:ts=4
 
 import os
 import gtk
