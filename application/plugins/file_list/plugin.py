@@ -2,7 +2,6 @@ import os
 import gtk
 import time
 import locale
-import gnomevfs
 import user
 import fnmatch
 import urllib
@@ -16,6 +15,7 @@ from gui.input_dialog import CopyDialog, MoveDialog, RenameDialog
 from gui.properties_window import PropertiesWindow
 from widgets.thumbnail_view import ThumbnailView
 from threading import Thread, Event
+from platform import filesystem
 
 # try to import I/O library
 try:
@@ -663,7 +663,7 @@ class FileList(ItemList):
 
 		if not is_dir:
 			# get associated programs
-			mime_type = gnomevfs.get_mime_type(filename)
+			mime_type = filesystem.get_mime_type(filename)
 			program_list = self._parent.menu_manager.get_items_for_type(mime_type, self._get_selection_list())
 
 			# create open with menu

@@ -1,10 +1,10 @@
 # coding:utf-8 vi:noet:ts=4
 
 import os
-import gnomevfs
 
 from urllib import quote
 from ConfigParser import ConfigParser
+from platform import filesystem
 
 
 class AssociationManager:
@@ -22,11 +22,11 @@ class AssociationManager:
 
 	def get_program_list_for_type(self, mime_type):
 		"""Get list of associated programs for specified type"""
-		return gnomevfs.mime_get_all_applications(mime_type)
+		return filesystem.mime_get_all_applications(mime_type)
 
 	def get_default_program_for_type(self, mime_type):
 		"""Get default application for specified type"""
-		return gnomevfs.mime_get_default_application(mime_type)
+		return filesystem.mime_get_default_application(mime_type)
 
 	def get_association_config(self, file_name):
 		"""Return dictionary containing all the options"""
@@ -90,8 +90,8 @@ class AssociationManager:
 
 	def execute_file(self, path):
 		"""Execute specified item"""
-		mime_type = gnomevfs.get_mime_type(path)
-		is_executable = gnomevfs.is_executable_command_string(path)
+		mime_type = filesystem.get_mime_type(path)
+		is_executable = filesystem.is_executable_command_string(path)
 
 		if mime_type in self.executable_types and is_executable:
 			# file is executable type and has executable bit set
