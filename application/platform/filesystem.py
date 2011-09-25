@@ -1,6 +1,8 @@
 # coding:utf-8 vi:noet:ts=4
 
 import sys
+import os
+import mimetypes
 
 if sys.platform == 'linux2':
 	# import linux modules
@@ -17,7 +19,14 @@ elif sys.platform == 'win32':
 		pass
 
 	def get_mime_type(path):
-		pass
+		if not mimetypes.inited:
+			mimetypes.init()
+		type = mimetypes.guess_type(path)[ 0 ]
+		if type:
+			return type
+		if os.path.isdir( path ):
+			return 'x-directory/normal'
+		return 'text/plain'
 
 	def is_executable_command_string(path):
 		pass
@@ -43,7 +52,14 @@ elif sys.platform == 'darwin':
 		pass
 
 	def get_mime_type(path):
-		pass
+		if not mimetypes.inited:
+			mimetypes.init()
+		type = mimetypes.guess_type(path)[ 0 ]
+		if type:
+			return type
+		if os.path.isdir( path ):
+			return 'x-directory/normal'
+		return 'text/plain'
 
 	def is_executable_command_string(path):
 		pass
