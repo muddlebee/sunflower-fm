@@ -1,4 +1,7 @@
+# coding:utf-8 vi:noet:ts=4
+
 import gtk
+import platform
 
 try:
 	import vte
@@ -39,8 +42,7 @@ class Terminal(PluginBase):
 
 		if self._parent.options.getboolean('main', 'tab_button_icons'):
 			# set icon
-			image_recycle = gtk.Image()
-			image_recycle.set_from_icon_name('reload', gtk.ICON_SIZE_MENU)
+			image_recycle = platform.image.menu_icon('reload')
 			self._recycle_button.set_image(image_recycle)
 		else:
 			# set text
@@ -61,7 +63,7 @@ class Terminal(PluginBase):
 		if self._parent.options.getboolean('main', 'tab_button_icons'):
 			# set icon
 			image_menu = gtk.Image()
-			image_menu.set_from_icon_name(gtk.STOCK_EDIT, gtk.ICON_SIZE_MENU)
+			image_menu.set_from_stock(gtk.STOCK_EDIT, gtk.ICON_SIZE_MENU)
 			self._menu_button.set_image(image_menu)
 		else:
 			# set text

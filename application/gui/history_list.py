@@ -2,6 +2,7 @@
 
 import os
 import gtk
+import platform
 
 COL_NAME		= 0
 COL_PATH		= 1
@@ -65,8 +66,7 @@ class HistoryList(gtk.Window):
 		button_jump.set_can_default(True)
 		button_jump.connect('clicked', self._change_path)
 
-		image_new_tab = gtk.Image()
-		image_new_tab.set_from_icon_name('tab-new', gtk.ICON_SIZE_BUTTON)
+		image_new_tab = platform.image.button_icon('tab-new')
 
 		button_new_tab = gtk.Button()
 		button_new_tab.set_image(image_new_tab)

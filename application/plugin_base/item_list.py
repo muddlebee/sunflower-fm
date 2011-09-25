@@ -1,8 +1,11 @@
+# coding:utf-8 vi:noet:ts=4
+
 import os
 import gtk
 import locale
 import urllib
 import common
+import platform
 
 from plugin import PluginBase
 
@@ -63,8 +66,7 @@ class ItemList(PluginBase):
 		self._bookmarks_button = gtk.Button()
 
 		if self._parent.options.getboolean('main', 'tab_button_icons'):
-			image_bookmarks = gtk.Image()
-			image_bookmarks.set_from_icon_name('go-jump', gtk.ICON_SIZE_MENU)
+			image_bookmarks = platform.image.menu_icon('go-jump')
 			self._bookmarks_button.set_image(image_bookmarks)
 
 		else:
@@ -86,8 +88,7 @@ class ItemList(PluginBase):
 
 		if self._parent.options.getboolean('main', 'tab_button_icons'):
 			# set icon
-			image_history = gtk.Image()
-			image_history.set_from_icon_name('document-open-recent', gtk.ICON_SIZE_MENU)
+			image_history = platform.image.menu_icon('document-open-recent')
 			self._history_button.set_image(image_history)
 		else:
 			# set text
@@ -109,8 +110,7 @@ class ItemList(PluginBase):
 
 		if self._parent.options.getboolean('main', 'tab_button_icons'):
 			# set icon
-			image_terminal = gtk.Image()
-			image_terminal.set_from_icon_name('terminal', gtk.ICON_SIZE_MENU)
+			image_terminal = platform.image.menu_icon('terminal')
 			self._terminal_button.set_image(image_terminal)
 		else:
 			# set text
@@ -894,8 +894,7 @@ class ItemList(PluginBase):
 			separator = gtk.SeparatorMenuItem()
 			self._history_menu.append(separator)
 
-			image = gtk.Image()
-			image.set_from_icon_name('document-open-recent', gtk.ICON_SIZE_MENU)
+			image = platform.image.menu_icon('document-open-recent')
 
 			menu_item = gtk.ImageMenuItem()
 			menu_item.set_image(image)

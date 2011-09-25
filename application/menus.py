@@ -1,6 +1,7 @@
 # coding:utf-8 vi:noet:ts=4
 
 import gtk
+import platform
 
 class MenuManager:
 	"""Menu handling class
@@ -46,12 +47,12 @@ class MenuManager:
 	def _item_image(self, item):
 		"""Create normal menu item with image"""
 		result = gtk.ImageMenuItem()
-		image = gtk.Image()
 
 		if item.has_key('image'):
-			image.set_from_icon_name(item['image'], gtk.ICON_SIZE_MENU)
+			image = platform.image.menu_icon(item['image'])
 
 		elif item.has_key('stock'):
+			image = gtk.Image()
 			image.set_from_stock(item['stock'], gtk.ICON_SIZE_MENU)
 
 		try:
@@ -115,8 +116,7 @@ class MenuManager:
 
 			# create new image
 			if icon_name is not None:
-				image = gtk.Image()
-				image.set_from_icon_name(icon_name, gtk.ICON_SIZE_MENU)
+				image = platform.image.menu_icon(icon_name)
 				item.set_image(image)
 
 			data = {

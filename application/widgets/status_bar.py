@@ -1,6 +1,7 @@
 # coding:utf-8 vi:noet:ts=4
 
 import gtk
+import platform
 
 
 class StatusBar(gtk.HBox):
@@ -36,8 +37,7 @@ class StatusBar(gtk.HBox):
 
 	def add_group_with_icon(self, name, icon_name, value=''):
 		"""Add status bar group with icon"""
-		icon = gtk.Image()
-		icon.set_from_icon_name(icon_name, gtk.ICON_SIZE_MENU)
+		icon = platform.image.menu_icon(icon_name)
 		icon.show()
 
 		label = gtk.Label(value)

@@ -1,6 +1,7 @@
 # coding:utf-8 vi:noet:ts=4
 
 import gtk
+import platform
 
 from gio import VolumeMonitor
 
@@ -77,8 +78,7 @@ class MountsManager:
 
 	def _add_item(self, text, path, icon):
 		"""Add new menu item to the list"""
-		image = gtk.Image()
-		image.set_from_icon_name(icon, gtk.ICON_SIZE_MENU)
+		image = platform.image.menu_icon(icon)
 
 		menu_item = gtk.ImageMenuItem()
 		menu_item.set_label(text)
@@ -92,8 +92,7 @@ class MountsManager:
 
 	def _add_unmount_item(self, text, path, icon):
 		"""Add new menu item used for unmounting"""
-		image = gtk.Image()
-		image.set_from_icon_name(icon, gtk.ICON_SIZE_MENU)
+		image = platform.image.menu_icon(icon)
 
 		menu_item = gtk.ImageMenuItem()
 		menu_item.set_label(text)

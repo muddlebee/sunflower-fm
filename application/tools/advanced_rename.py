@@ -2,6 +2,7 @@
 
 import os
 import gtk
+import platform
 
 from operation import RenameOperation
 
@@ -88,8 +89,7 @@ class AdvancedRename:
 		button_cancel = gtk.Button(stock=gtk.STOCK_CANCEL)
 		button_cancel.connect('clicked', self._close_window)
 
-		image_rename = gtk.Image()
-		image_rename.set_from_icon_name('edit-find-replace', gtk.ICON_SIZE_BUTTON)
+		image_rename = platform.image.button_icon('edit-find-replace')
 		button_rename = gtk.Button(label=_('Rename'))
 		button_rename.set_image(image_rename)
 		button_rename.connect('clicked', self.rename_files)

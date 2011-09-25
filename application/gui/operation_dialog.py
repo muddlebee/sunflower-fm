@@ -5,6 +5,7 @@ import pango
 import locale
 import gobject
 import common
+import platform
 
 class OperationDialog(gtk.Window):
 	"""Dialog for operations
@@ -404,7 +405,8 @@ class OperationDialog(gtk.Window):
 	def _set_operation_image(self, icon_name=None):
 		"""Set default or specified operation image"""
 		if icon_name is not None:
-			self._operation_image.set_from_icon_name(icon_name, gtk.ICON_SIZE_MENU)
+			image = platform.image.menu_icon(icon_name)
+			platform.image.clone(image, self._operation_image)
 
 	def set_status(self, status):
 		"""Set current status"""
@@ -585,4 +587,6 @@ class RenameDialog(OperationDialog):
 
 		# set default icon
 		if icon_name is None:
-			self._operation_image.set_from_icon_name('edit-find-replace', gtk.ICON_SIZE_MENU)
+			image = platform.image.menu_icon('edit-find-replace')
+			platform.image.clone(image, self._operation_image)
+
