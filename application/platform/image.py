@@ -42,5 +42,6 @@ def from_icon_name(name, size):
 		img.set_from_icon_name(name, size)
 	else:
 		print("icon not found: {0}".format(name))
+		img.set_from_stock(gtk.STOCK_MISSING_IMAGE, size)
 	return img
 
