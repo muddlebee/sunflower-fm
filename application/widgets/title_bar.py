@@ -1,5 +1,8 @@
+# coding:utf-8 vi:noet:ts=4
+
 import gtk
 import pango
+import platform
 
 from math import pi
 
@@ -186,7 +189,8 @@ class TitleBar(gtk.HBox):
 
 	def set_icon_from_name(self, icon_name):
 		"""Set icon from specified name"""
-		self._icon.set_from_icon_name(icon_name, gtk.ICON_SIZE_LARGE_TOOLBAR)
+		image = platform.image.large_toolbar_icon(icon_name)
+		platform.image.clone(image, self._icon)
 
 	def apply_settings(self):
 		"""Method called when system applies new settings"""

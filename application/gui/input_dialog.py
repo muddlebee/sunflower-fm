@@ -1,9 +1,12 @@
+# coding:utf-8 vi:noet:ts=4
+
 import os
 import gtk
 import time
 import locale
 import fnmatch
 import user
+import platform
 
 from provider import FileType
 from common import get_user_directory, UserDirectory
@@ -700,7 +703,8 @@ class OverwriteDialog(gtk.Dialog):
 		"""Set original element data"""
 		data = self._get_data(provider, path, relative_to)
 
-		self._icon_original.set_from_icon_name(data[2], gtk.ICON_SIZE_DIALOG)
+		image = platform.image.dialog_icon(data[2])
+		platform.image.clone(image, self._icon_original)
 		self._label_original.set_markup(
 									'<b>{2}</b>\n'
 									'<i>{3}</i>\t\t{0}\n'
@@ -717,7 +721,8 @@ class OverwriteDialog(gtk.Dialog):
 		"""Set source element data"""
 		data = self._get_data(provider, path, relative_to)
 
-		self._icon_source.set_from_icon_name(data[2], gtk.ICON_SIZE_DIALOG)
+		image = platform.image.dialog_icon(data[2])
+		platform.image.clone(image, self._icon_source)
 		self._label_source.set_markup(
 									'<b>{2}</b>\n'
 									'<i>{3}</i>\t\t{0}\n'

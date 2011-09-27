@@ -1,13 +1,14 @@
+# coding:utf-8 vi:noet:ts=4
+
 import os
 import gtk
 import gio
 import pango
-import gnomevfs
 import locale
 import time
 import stat
 import common
-
+import platform
 
 class PropertiesWindow(gtk.Window):
 	"""Properties window for files and directories"""
@@ -164,7 +165,7 @@ class PropertiesWindow(gtk.Window):
 
 	def _load_associated_applications(self):
 		"""Get associated applications with file/directory"""
-		mime_type = gnomevfs.get_mime_type(self._path)
+		mime_type = platform.filesystem.get_mime_type(self._path)
 		associations_manager = self._application.associations_manager
 		list_ = associations_manager.get_program_list_for_type(mime_type)
 		default_application = associations_manager.get_default_program_for_type(mime_type)
@@ -190,13 +191,13 @@ class PropertiesWindow(gtk.Window):
 
 	def _update_data(self):
 		"""Update widgets to represent item state"""
-		mime_type = gnomevfs.get_mime_type(self._path)
+		mime_type = platform.filesystem.get_mime_type(self._path)
 		format = self._application.options.get('main', 'time_format')
 		human_readable = self._application.options.getboolean('main', 'human_readable_size')
 		item_stat = self._provider.get_stat(self._path, extended=True)
 
 		# get item description
-		description = gnomevfs.mime_get_description(mime_type)
+		description = platform.filesystem.mime_get_description(mime_type)
 
 		# get item size
 		if self._is_file:
@@ -291,7 +292,7 @@ class PropertiesWindow(gtk.Window):
 		active_item = self._store[path]
 
 		# get data
-		mime_type = gnomevfs.get_mime_type(self._path)
+		mime_type = platform.filesystem.get_mime_type(self._path)
 		application = active_item[3]
 
 		# set default application
@@ -311,8 +312,7 @@ class PropertiesWindow(gtk.Window):
 		tab.set_border_width(10)
 
 		# create icon
-		icon = gtk.Image()
-		icon.set_from_icon_name(self._icon_name, gtk.ICON_SIZE_DIALOG)
+		icon = platform.image.dialog_icon(self._icon_name)
 
 		vbox_icon = gtk.VBox(False, 0)
 		vbox_icon.pack_start(icon, False, False)
@@ -480,8 +480,8 @@ class PropertiesWindow(gtk.Window):
 		tab.set_border_width(10)
 
 		# get item description
-		mime_type = gnomevfs.get_mime_type(self._path)
-		description = gnomevfs.mime_get_description(mime_type)
+		mime_type = platform.filesystem.get_mime_type(self._path)
+		description = platform.filesystem.mime_get_description(mime_type)
 
 		# create label
 		text = _(
