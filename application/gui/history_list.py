@@ -57,8 +57,7 @@ class HistoryList(gtk.Window):
 		button_close = gtk.Button(stock=gtk.STOCK_CLOSE)
 		button_close.connect('clicked', self._close)
 
-		image_jump = gtk.Image()
-		image_jump.set_from_icon_name('go-jump', gtk.ICON_SIZE_BUTTON)
+		image_jump = platform.image.button_icon('go-jump')
 
 		button_jump = gtk.Button()
 		button_jump.set_image(image_jump)

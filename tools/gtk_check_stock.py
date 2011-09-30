@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # coding:utf-8 vi:noet:ts=4
 
+# Script for developers. Displays all icons available for GTK.
+
 import gtk, math
 
 defined = [ s for s in dir( gtk ) if s.startswith( "STOCK_" ) ]

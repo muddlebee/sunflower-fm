@@ -10,6 +10,7 @@ import user
 import gettext
 import common
 import shlex
+import platform
 
 from menus import MenuManager
 from mounts import MountsManager
@@ -513,8 +514,7 @@ class MainWindow(gtk.Window):
 		self.menu_bookmarks.set_accel_group(self.menu_manager.get_accel_group())
 
 		# mounts menu
-		mounts_image = gtk.Image()
-		mounts_image.set_from_icon_name('computer', gtk.ICON_SIZE_MENU)
+		mounts_image = platform.image.menu_icon('computer')
 
 		self._menu_item_mounts = gtk.ImageMenuItem()
 		self._menu_item_mounts.set_label(_('Mounts'))
@@ -681,8 +681,7 @@ class MainWindow(gtk.Window):
 		# add home if specified
 		if self.options.getboolean('main', 'add_home'):
 			bookmark = gtk.ImageMenuItem()
-			image = gtk.Image()
-			image.set_from_icon_name('user-home', gtk.ICON_SIZE_MENU)
+			image = platform.image.menu_icon('user-home')
 
 			bookmark.set_image(image)
 			bookmark.set_always_show_image(True)
@@ -699,8 +698,7 @@ class MainWindow(gtk.Window):
 			data = self.bookmark_options.get('bookmarks', 'b_{0}'.format(index)).split(';', 1)
 
 			bookmark = gtk.ImageMenuItem()
-			image = gtk.Image()
-			image.set_from_icon_name('folder', gtk.ICON_SIZE_MENU)
+			image = platform.image.menu_icon('folder')
 
 			bookmark.set_image(image)
 			bookmark.set_always_show_image(True)
