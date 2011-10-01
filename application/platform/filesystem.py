@@ -31,22 +31,22 @@ if sys.platform == 'linux2':
 	try:
 		from gnomevfs import *
 	except:
-		mime_get_all_applications = d_mime_get_all_applications
+		mime_get_all_applications    = d_mime_get_all_applications
 		mime_get_default_application = d_mime_get_default_application
-		get_mime_type = d_get_mime_type
+		get_mime_type                = d_get_mime_type
 		is_executable_command_string = d_is_executable_command_string
-		mime_get_description = d_mime_get_description
+		mime_get_description         = d_mime_get_description
 
 	from os import statvfs
 
 elif sys.platform == 'win32':
 	# define methods for Windows
 
-	mime_get_all_applications = d_mime_get_all_applications
+	mime_get_all_applications    = d_mime_get_all_applications
 	mime_get_default_application = d_mime_get_default_application
-	get_mime_type = d_get_mime_type
+	get_mime_type                = d_get_mime_type
 	is_executable_command_string = d_is_executable_command_string
-	mime_get_description = d_mime_get_description
+	mime_get_description         = d_mime_get_description
 
 	def statvfs(path):
 		class Stat(object):
