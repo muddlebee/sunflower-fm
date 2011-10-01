@@ -189,8 +189,8 @@ class TitleBar(gtk.HBox):
 
 	def set_icon_from_name(self, icon_name):
 		"""Set icon from specified name"""
-		image = platform.image.large_toolbar_icon(icon_name)
-		platform.image.clone(image, self._icon)
+		pixbuf = platform.image.large_toolbar_pixbuf(icon_name)
+		self._icon.set_from_pixbuf(pixbuf)
 
 	def apply_settings(self):
 		"""Method called when system applies new settings"""

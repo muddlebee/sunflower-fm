@@ -405,8 +405,8 @@ class OperationDialog(gtk.Window):
 	def _set_operation_image(self, icon_name=None):
 		"""Set default or specified operation image"""
 		if icon_name is not None:
-			image = platform.image.menu_icon(icon_name)
-			platform.image.clone(image, self._operation_image)
+			pixbuf = platform.image.menu_pixbuf(icon_name)
+			self._operation_image.set_from_pixbuf(pixbuf)
 
 	def set_status(self, status):
 		"""Set current status"""
@@ -587,6 +587,6 @@ class RenameDialog(OperationDialog):
 
 		# set default icon
 		if icon_name is None:
-			image = platform.image.menu_icon('edit-find-replace')
-			platform.image.clone(image, self._operation_image)
+			pixbuf = platform.image.menu_pixbuf('edit-find-replace')
+			self._operation_image.set_from_pixbuf(pixbuf)
 

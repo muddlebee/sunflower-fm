@@ -703,8 +703,8 @@ class OverwriteDialog(gtk.Dialog):
 		"""Set original element data"""
 		data = self._get_data(provider, path, relative_to)
 
-		image = platform.image.dialog_icon(data[2])
-		platform.image.clone(image, self._icon_original)
+		pixbuf = platform.image.dialog_pixbuf(data[2])
+		self._icon_original.set_from_pixbuf(pixbuf)
 		self._label_original.set_markup(
 									'<b>{2}</b>\n'
 									'<i>{3}</i>\t\t{0}\n'
@@ -721,8 +721,8 @@ class OverwriteDialog(gtk.Dialog):
 		"""Set source element data"""
 		data = self._get_data(provider, path, relative_to)
 
-		image = platform.image.dialog_icon(data[2])
-		platform.image.clone(image, self._icon_source)
+		pixbuf = platform.image.dialog_pixbuf(data[2])
+		self._icon_source.set_from_pixbuf(pixbuf)
 		self._label_source.set_markup(
 									'<b>{2}</b>\n'
 									'<i>{3}</i>\t\t{0}\n'

@@ -95,8 +95,8 @@ class ThumbnailView(gtk.Window):
 
 		# no pixbuf was found, show missing image
 		else:
-			image = platform.image.dialog_icon('gtk-missing-image')
-			platform.image.clone(image,self._image)
+			pixbuf = platform.image.dialog_pixbuf('gtk-missing-image')
+			self._image.set_from_pixbuf(pixbuf)
 
 	def move(self, left, top):
 		"""Move thumbnail window"""
