@@ -1,3 +1,5 @@
+# coding:utf-8 vi:noet:ts=4
+
 import os
 import gtk
 import time
@@ -7,6 +9,7 @@ import fnmatch
 import urllib
 import common
 import platform
+import gobject
 
 from provider import FileType
 from local_provider import LocalProvider
@@ -47,6 +50,22 @@ class Column:
 	COLOR = 11
 	ICON = 12
 	SELECTED = 13
+
+
+class IconRenderer(gtk.CellRendererPixbuf):
+
+	def do_get_size(self, widget, cell_area):
+		return 0, 0, 16, 16
+
+	def do_render(self, window, widget, background_area, cell_area, expose_area, flags):
+		pixbuf = platform.image.menu_pixbuf(self.get_property('icon-name'))
+		if pixbuf:
+			clip = widget.get_style().fg_gc[gtk.STATE_NORMAL]
+			x, y, _, _ = cell_area
+			window.draw_pixbuf(clip, pixbuf, 0, 0, x, y)
+
+
+gobject.type_register( IconRenderer )
 
 
 class FileList(ItemList):
@@ -100,7 +119,7 @@ class FileList(ItemList):
 
 		# create columns
 		cell_selected = gtk.CellRendererPixbuf()
-		cell_icon = gtk.CellRendererPixbuf()
+		cell_icon = IconRenderer()
 		cell_name = gtk.CellRendererText()
 		cell_extension = gtk.CellRendererText()
 		cell_size = gtk.CellRendererText()

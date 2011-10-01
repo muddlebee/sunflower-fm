@@ -51,7 +51,10 @@ def pixbuf_for_name(name, size):
 				pass
 		cache[key] = pixbuf
 	# Return icon from cache, if any.
-	return cache[key]
+	pixbuf = cache[key]
+	if not pixbuf:
+		print("icon not found: {0} {1}".format(name, ABOUT_SIZES[size]))
+	return pixbuf
 
 def icon_for_name(name, size):
 	img = gtk.Image()
@@ -64,7 +67,6 @@ def icon_for_name(name, size):
 		if pixbuf:
 			img.set_from_pixbuf(pixbuf)
 		else:
-			print("icon not found: {0} {1}".format(name, ABOUT_SIZES[size]))
 			img.set_from_stock(gtk.STOCK_MISSING_IMAGE, size)
 	return img
 
