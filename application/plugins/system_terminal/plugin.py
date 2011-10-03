@@ -15,7 +15,8 @@ class SystemTerminal(Terminal):
 		Terminal.__init__(self, parent, notebook, path)
 
 		self._close_on_child_exit = True
-		shell_command = os.environ['SHELL']
+		if os.environ.has_key('SHELL'):
+			shell_command = os.environ['SHELL']
 
 		# we need TERM environment variable set
 		if not os.environ.has_key('TERM'):
