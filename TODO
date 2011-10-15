@@ -1,7 +1,3 @@
-! Use of gtk.gdk.lock instead of threads_enter/leave
-
-! Use gtk.gdk.lock on every GTK+ method called outside main thread except those called with gobject.idle_add
-
 - Prevent columns-changed signal for emitting on application close
 
 - Lazy accelerator switch (should fix some of the crash problems)
@@ -19,8 +15,6 @@
 - Remove duplicates from history file when loading
 
 - Show rename when moving a single file in same directory
-
-- Change path should operate in separate thread
 
 - Mark symbolic links somehow
 
@@ -60,4 +54,4 @@
 
 - Create mount manager
 
-- Terminal options
+- Terminal options (read font, size, background, cursor type)

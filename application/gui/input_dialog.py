@@ -94,7 +94,7 @@ class InputDialog(gtk.Dialog):
 		code = self.run()
 		result = self._entry.get_text()
 
-		self.destroy()
+		self.hide()
 
 		return (code, result)
 
@@ -506,7 +506,7 @@ class CopyDialog(gtk.Dialog):
 				self.checkbox_mode.get_active()
 				)
 
-		self.destroy()
+		self.hide()
 
 		return (code, options)
 
@@ -754,7 +754,7 @@ class OverwriteDialog(gtk.Dialog):
 				self._checkbox_apply_to_all.get_active()
 				)
 
-		self.destroy()
+		self.hide()
 
 		return (code, options)
 
@@ -907,7 +907,7 @@ class AddBookmarkDialog(gtk.Dialog):
 		name = self._entry_name.get_text()
 		path = self._entry_path.get_text()
 
-		self.destroy()
+		self.hide()
 
 		return (code, name, path)
 
@@ -1099,7 +1099,7 @@ class CreateToolbarWidgetDialog(gtk.Dialog):
 			name = self._entry_name.get_text()
 			widget_type = self._type_list[self._combobox_type.get_active()][0]
 
-		self.destroy()
+		self.hide()
 
 		return code, name, widget_type
 
@@ -1119,10 +1119,154 @@ class InputRangeDialog(InputDialog):
 		self._entry.set_text(text)
 
 	def get_response(self):
-		"""Return selection range and self-destruct"""
+		"""Return selection selection_range and self-destruct"""
 		code = self.run()
-		range = self._entry.get_selection_bounds()
+		selection_range = self._entry.get_selection_bounds()
 
-		self.destroy()
+		self.hide()
 
-		return code, range
+		return code, selection_range
+
+
+class ApplicationSelectDialog(gtk.Dialog):
+	"""Provides user with a list of installed applications and
+	option to enter command"""
+	
+	help_url = 'standards.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html#exec-variables'
+	
+	def __init__(self, application, path=None):
+		gtk.Dialog.__init__(self, parent=application)
+		
+		self._application = application
+		self.path = path
+
+		# configure dialog
+		self.set_title(_('Open With'))
+		self.set_default_size(500, 400)
+		self.set_resizable(True)
+		self.set_skip_taskbar_hint(True)
+		self.set_modal(True)
+		self.set_transient_for(application)
+		self.set_wmclass('Sunflower', 'Sunflower')
+
+		self.vbox.set_spacing(0)
+		self.vbox.set_border_width(0)
+		
+		self._container = gtk.VBox(False, 5)
+		self._container.set_border_width(5)
+
+		# create interface		
+		vbox_list = gtk.VBox(False, 0)
+		
+		label_open_with = gtk.Label()
+		label_open_with.set_use_markup(True)
+		label_open_with.set_alignment(0, 0.5)
+		if path is None:
+			label_open_with.set_label(_('Select application:'))
+			
+		else:
+			label_open_with.set_label(_('Open <i>{0}</i> with:').format(os.path.basename(path)))
+			
+		# create application list
+		list_container = gtk.ScrolledWindow()
+		list_container.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
+		list_container.set_shadow_type(gtk.SHADOW_IN)
+		
+		self._store = gtk.ListStore(str, str, str, str, str)
+		self._list = gtk.TreeView(model=self._store)
+	
+		cell_icon = gtk.CellRendererPixbuf()
+		cell_name = gtk.CellRendererText()
+		cell_generic = gtk.CellRendererText()
+		
+		column_application = gtk.TreeViewColumn()
+		column_application.pack_start(cell_icon, False)
+		column_application.pack_start(cell_name, True)
+		column_application.add_attribute(cell_icon, 'icon-name', 0)
+		column_application.add_attribute(cell_name, 'text', 1)
+		column_application.set_expand(True)
+		
+		column_generic = gtk.TreeViewColumn()
+		column_generic.pack_start(cell_generic, True)
+		column_generic.add_attribute(cell_generic, 'markup', 4)
+		
+		self._list.append_column(column_application)
+		self._list.append_column(column_generic)
+		self._list.set_headers_visible(False)
+		self._list.set_search_column(1)
+		self._list.set_enable_search(True)
+		self._list.connect('cursor-changed', self.__handle_cursor_change)
+		
+		self._store.set_sort_column_id(1, gtk.SORT_ASCENDING)
+		
+		# create custom command entry
+		self._expander_custom = gtk.Expander(label=_('Use a custom command'))
+		
+		hbox_custom = gtk.HBox(False, 7)
+		
+		self._entry_custom = gtk.Entry()
+		
+		# pack interface
+		list_container.add(self._list)
+		vbox_list.pack_start(label_open_with, False, False, 0)
+		vbox_list.pack_start(list_container, True, True, 0)
+		
+		hbox_custom.pack_start(self._entry_custom, True, True, 0)
+		self._expander_custom.add(hbox_custom)
+		
+		self._container.pack_start(vbox_list, True, True, 0)
+		self._container.pack_start(self._expander_custom, False, False, 0)
+		
+		self.vbox.pack_start(self._container, True, True, 0)
+				
+		# create controls
+		button_help = gtk.Button(stock=gtk.STOCK_HELP)
+		button_help.connect('clicked', self._application.goto_web, self.help_url)
+		
+		button_open = gtk.Button(stock=gtk.STOCK_OPEN)
+		button_open.set_can_default(True)
+		
+		button_cancel = gtk.Button(stock=gtk.STOCK_CANCEL)
+		
+		self.action_area.pack_start(button_help, False, False, 0)
+		self.add_action_widget(button_cancel, gtk.RESPONSE_CANCEL)
+		self.add_action_widget(button_open, gtk.RESPONSE_OK)
+		self.set_default_response(gtk.RESPONSE_OK)
+		
+		# populate content
+		self._load_applications()
+
+		self.show_all()
+		
+	def __handle_cursor_change(self, widget, data=None):
+		"""Handle setting or changing list cursor"""
+		selection = widget.get_selection()
+		item_store, selected_iter = selection.get_selected()
+		
+		if selected_iter is not None:
+			command = item_store.get_value(selected_iter, 3)
+			self._entry_custom.set_text(command)
+		
+	def _load_applications(self):
+		"""Populate application list from config files"""
+		application_list = self._application.associations_manager.get_all()
+
+		for application in application_list:
+			if '%' in application.command_line:
+				self._store.append((
+							application.icon, 
+							application.name, 
+							application.id, 
+							application.command_line,
+							'<small>{0}</small>'.format(application.description)
+						))
+		
+	def get_response(self):
+		"""Get response and destroy dialog"""
+		code = self.run()
+		is_custom = self._expander_custom.get_expanded()
+		command = self._entry_custom.get_text()
+		
+		self.hide()
+
+		return code, is_custom, command

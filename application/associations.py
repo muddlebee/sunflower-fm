@@ -1,55 +1,115 @@
 # coding:utf-8 vi:noet:ts=4
 
 import os
+import gio
 
 from urllib import quote
-from ConfigParser import ConfigParser
 from platform import filesystem
+from collections import namedtuple
+
+
+ApplicationInfo = namedtuple(
+				'ApplicationInfo',
+				[
+					'id',
+					'name',
+					'description',
+					'executable',
+					'command_line',
+					'icon'
+				])
 
 
 class AssociationManager:
 	"""Class that provides 'Open With' menu"""
-
-	executable_types = (
-					'application/x-executable',
-					'application/x-shellscript',
-				)
-
-	def __init__(self):
-		self._config_section = 'Desktop Entry'
-		self._application_config_path = '/usr/share/applications'
-		self._user_path = os.path.expanduser('~/.local/share/applications')
-
-	def get_program_list_for_type(self, mime_type):
-		"""Get list of associated programs for specified type"""
-		return filesystem.mime_get_all_applications(mime_type)
-
-	def get_default_program_for_type(self, mime_type):
-		"""Get default application for specified type"""
-		return filesystem.mime_get_default_application(mime_type)
-
-	def get_association_config(self, file_name):
-		"""Return dictionary containing all the options"""
+	
+	def __get_icon(self, icon_object):
+		"""Get icon string from GIO icon object"""
 		result = None
-		config = ConfigParser()
-
-		if os.path.exists(os.path.join(self._user_path, file_name)):
-			config.read(os.path.join(self._user_path, file_name))
-
-		elif os.path.exists(os.path.join(self._application_config_path, file_name)):
-			config.read(os.path.join(self._application_config_path, file_name))
-
-		if config.has_section(self._config_section):
-			result = dict(config.items(self._config_section))
-
+		
+		if hasattr(icon_object, 'get_names'):
+			result = icon_object.get_names()[0]
+			
+		elif hasattr(icon_object, 'get_file'):
+			result = icon_object.get_file().get_path()
+			
 		return result
 
-	def open_file_with_config(self, selection, config_file):
-		"""Open filename using config data"""
-		config = self.get_association_config(config_file)
-		if config is None: return
+	def get_mime_type(self, path):
+		"""Get mime type for specified path"""
+		return gio.content_type_guess(path)
+	
+	def get_mime_description(self, mime_type):
+		"""Get description from mime type"""
+		return gio.content_type_get_description(mime_type)
 
-		command = config['exec']
+	def get_all(self):
+		"""Return list of all applications"""
+		result = []
+		
+		for app_info in gio.app_info_get_all():
+			application = ApplicationInfo(
+									id = app_info.get_id(),
+									name = app_info.get_name(),
+									description = app_info.get_description(),
+									executable = app_info.get_executable(),
+									command_line = app_info.get_commandline(),
+									icon = self.__get_icon(app_info.get_icon())
+								)
+			
+			result.append(application)
+			
+		return result
+
+	def get_application_list_for_type(self, mime_type):
+		"""Get list of associated programs for specified type"""
+		result = []
+		
+		for app_info in gio.app_info_get_all_for_type(mime_type):
+			application = ApplicationInfo(
+									id = app_info.get_id(),
+									name = app_info.get_name(),
+									description = app_info.get_description(),
+									executable = app_info.get_executable(),
+									command_line = app_info.get_commandline(),
+									icon = self.__get_icon(app_info.get_icon())
+								)
+			
+			result.append(application)
+			
+		return result
+
+	def get_default_application_for_type(self, mime_type):
+		"""Get default application for specified type"""
+		app_info = gio.app_info_get_default_for_type(mime_type, must_support_uris=False)
+		application = ApplicationInfo(
+								id = app_info.get_id(),
+								name = app_info.get_name(),
+								description = app_info.get_description(),
+								executable = app_info.get_executable(),
+								command_line = app_info.get_commandline(),
+								icon = self.__get_icon(app_info.get_icon())
+							)
+					
+		return application
+
+	def open_file(self, selection, application_info=None, exec_command=None):
+		"""Open filename using config file or specified execute command"""
+		if application_info is not None:
+			# get command from config file
+			command = application_info.command_line
+			
+		elif exec_command is not None:
+			# use specified command
+			command = exec_command
+		
+		else:
+			# raise exception, we need at least one argument
+			raise AttributeError('We need either config_file or command to be specified!')
+		
+		# we modify exec_string and use 
+		# command for testing to avoid problem
+		# with Unicode characters in URI
 		exec_string = command
 
 		if selection is not None:
@@ -59,7 +119,7 @@ class AssociationManager:
 			dir_list = ["'{0}'".format(os.path.dirname(item) for item in selection)]
 			names_list = ["'{0}'".format(os.path.basename(item) for item in selection)]
 
-			# prepare single line selection
+			# prepare single item selection
 			if '%f' in command:
 				exec_string = exec_string.replace('%f', "'{0}'".format(selection[0]))
 
@@ -90,16 +150,15 @@ class AssociationManager:
 
 	def execute_file(self, path):
 		"""Execute specified item"""
-		mime_type = filesystem.get_mime_type(path)
-		is_executable = filesystem.is_executable_command_string(path)
 
-		if mime_type in self.executable_types and is_executable:
+		mime_type = self.get_mime_type(path)
+		is_executable = gio.content_type_can_be_executable(mime_type)
+
+		if is_executable:
 			# file is executable type and has executable bit set
 			os.system('{0} &'.format(path))
 
 		else:
 			# file does not have executable bit set, open with default application
-			default_program = self.get_default_program_for_type(mime_type)
-			config_file = default_program[0]
-
-			self.open_file_with_config((path,), config_file)
+			default_program = self.get_default_application_for_type(mime_type)
+			self.open_file((path,), default_program)

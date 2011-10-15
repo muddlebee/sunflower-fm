@@ -126,7 +126,7 @@ class ItemList(PluginBase):
 		self._terminal_button.connect('clicked', self._create_terminal)
 
 		self._title_bar.add_control(self._terminal_button)
-
+		
 		# configure status bar
 		self._status_bar.add_group_with_icon('dirs', 'folder', '0/0')
 		self._status_bar.add_group_with_icon('files', 'document', '0/0')
@@ -195,6 +195,7 @@ class ItemList(PluginBase):
 
 		# add all methods to group
 		group.add_method('execute_item', _('Execute selected item'), self._execute_selected_item)
+		group.add_method('execute_with_application', _('Select application and execute item'), self._execute_with_application)
 		group.add_method('item_properties', _('Show selected item properties'), self._item_properties)
 		group.add_method('add_bookmark', _('Bookmark current directory'), self._add_bookmark)
 		group.add_method('edit_bookmarks', _('Edit bookmarks'), self._edit_bookmarks)
@@ -360,7 +361,6 @@ class ItemList(PluginBase):
 		and event.type is gtk.gdk.BUTTON_PRESS:
 			start_path = None
 			end_path = None
-			current_status = False
 
 			# get source path
 			selection = self._item_list.get_selection()
@@ -605,7 +605,11 @@ class ItemList(PluginBase):
 		return False
 
 	def _execute_selected_item(self, widget=None, data=None):
-		"""Abstract method for handling execution of certain item"""
+		"""Execute selected item"""
+		return True
+	
+	def _execute_with_application(self, widget=None, data=None):
+		"""Show application selection dialog and then execute item"""
 		return True
 
 	def _open_in_new_tab(self, widget=None, data=None):

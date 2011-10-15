@@ -2,8 +2,6 @@
 
 import os
 import gtk
-import platform
-
 
 try:
 	# try to import module
@@ -54,7 +52,7 @@ class ThumbnailView(gtk.Window):
 		"""Check if specified URI can have thumbnail"""
 		if not USE_FACTORY: return False  # if factory is not available, exit
 
-		mime_type = platform.filesystem.get_mime_type(uri)
+		mime_type = self._parent._parent.associations_manager.get_mime_type(uri)
 		return self._factory.can_thumbnail(uri, mime_type, 0)
 
 	def get_thumbnail(self, uri):
@@ -62,7 +60,7 @@ class ThumbnailView(gtk.Window):
 		if not USE_FACTORY: return None  # if factory is not available, exit
 
 		result = None
-		mime_type = platform.filesystem.get_mime_type(uri)
+		mime_type = self._parent._parent.associations_manager.get_mime_type(uri)
 
 		# check for existing thumbnail
 		thumbnail_file = self._factory.lookup(uri, 0)

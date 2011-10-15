@@ -176,6 +176,17 @@ class AboutWindow(gtk.Window):
 		programmers.attach(developer, 0, 1, 2, 3)
 		programmers.attach(email, 1, 2, 2, 3)
 
+		developer = gtk.Label('\tGrigory Petrov')
+		developer.set_alignment(0, 0)
+		developer.set_selectable(True)
+
+		email = gtk.Label('grigory.v.p@gmail.com')
+		email.set_alignment(0, 0)
+		email.set_selectable(True)
+
+		programmers.attach(developer, 0, 1, 3, 4)
+		programmers.attach(email, 1, 2, 3, 4)
+
 		# artist info
 		artists = gtk.Table(1, 2, False)
 		artists.set_row_spacings(7)
@@ -303,6 +314,25 @@ class AboutWindow(gtk.Window):
 		translators.attach(translator, 0, 1, 6, 7)
 		translators.attach(email, 1, 2, 6, 7)
 		translators.attach(language, 2, 3, 6, 7)
+
+		# German
+		translator = gtk.Label('\tSebastian Gaul')
+		translator.set_alignment(0, 0)
+		translator.set_selectable(True)
+
+		email = gtk.Label(
+						'sebastian@dev.mgvmedia.com\n'
+						'http://sgaul.de'
+					)
+		email.set_alignment(0, 0)
+		email.set_selectable(True)
+
+		language = gtk.Label('German language')
+		language.set_alignment(0, 0)
+
+		translators.attach(translator, 0, 1, 7, 8)
+		translators.attach(email, 1, 2, 7, 8)
+		translators.attach(language, 2, 3, 7, 8)
 
 		# separators
 		separator1 = gtk.HSeparator()

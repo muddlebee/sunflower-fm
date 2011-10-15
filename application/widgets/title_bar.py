@@ -1,10 +1,9 @@
 # coding:utf-8 vi:noet:ts=4
 
 import gtk
+import math
 import pango
 import platform
-
-from math import pi
 
 
 class TitleBar(gtk.HBox):
@@ -42,12 +41,21 @@ class TitleBar(gtk.HBox):
 		self._subtitle_label.set_use_markup(False)
 		self._subtitle_label.modify_font(font)
 
+		# create spinner control if it exists
+		if hasattr(gtk, 'Spinner'):
+			self._spinner = gtk.Spinner()
+			self._spinner.set_size_request(20, 20)
+			self._spinner.set_property('no-show-all', True)
+
 		# pack interface
 		vbox.pack_start(self._title_label, True, True, 0)
 		vbox.pack_start(self._subtitle_label, False, False, 0)
 
 		self.pack_start(self._icon, False, False, 0)
 		self.pack_start(vbox, True, True, 3)
+
+		if self._spinner is not None:
+			self.pack_start(self._spinner, False, False, 5)
 
 	def __get_colors(self, normal_style=False):
 		"""Get copy of the style for current state"""
@@ -90,13 +98,13 @@ class TitleBar(gtk.HBox):
 			result += controls[index].allocation.width
 
 		return result
-		
+
 	def __expose_event(self, widget=None, event=None):
 		"""We use this event to paint backgrounds"""
 		x, y, w, h = self.allocation
 		x_offset = x + w
 		y_offset = y + h
-		half_pi = pi / 2
+		half_pi = math.pi / 2
 
 		context = self.window.cairo_create()
 
@@ -161,6 +169,10 @@ class TitleBar(gtk.HBox):
 		self._title_label.modify_fg(gtk.STATE_NORMAL, color)
 		self._subtitle_label.modify_fg(gtk.STATE_NORMAL, color)
 
+		# apply spinner color
+		if self._spinner is not None:
+			self._spinner.modify_fg(gtk.STATE_NORMAL, color)
+
 	def add_control(self, widget):
 		"""Add button control"""
 		self._control_count += 1
@@ -191,6 +203,18 @@ class TitleBar(gtk.HBox):
 		"""Set icon from specified name"""
 		pixbuf = platform.image.large_toolbar_pixbuf(icon_name)
 		self._icon.set_from_pixbuf(pixbuf)
+
+	def show_spinner(self):
+		"""Show spinner widget"""
+		if self._spinner is not None:
+			self._spinner.show()
+			self._spinner.start()
+
+	def hide_spinner(self):
+		"""Hide spinner widget"""
+		if self._spinner is not None:
+			self._spinner.stop()
+			self._spinner.hide()
 
 	def apply_settings(self):
 		"""Method called when system applies new settings"""

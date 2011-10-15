@@ -72,7 +72,7 @@ class MenuManager:
 
 	def _open_with_callback(self, widget, data):
 		"""Callback event for menu items from 'open with' menu"""
-		self._application.associations_manager.open_file_with_config(data['selection'], data['config'])
+		self._application.associations_manager.open_file(data['selection'], data['application'])
 
 	def get_accel_group(self):
 		"""Return accelerator group"""
@@ -94,33 +94,21 @@ class MenuManager:
 		callback - method used to get list selection
 
 		"""
-		program_list = self._application.associations_manager.get_program_list_for_type(mime_type)
+		application_list = self._application.associations_manager.get_application_list_for_type(mime_type)
 		result = []
 
-		for program in program_list:
-			# extract data
-			config_file = program[0]
-			name = program[1]
-			icon_name = None
-
-			# get config file
-			config = self._application.associations_manager.get_association_config(config_file)
-
-			# parse the config
-			if config is not None and config.has_key('icon'):
-				icon_name = config['icon']
-
+		for application in application_list:
 			# create menu item
 			item = gtk.ImageMenuItem()
-			item.set_label(name)
+			item.set_label(application.name)
 
 			# create new image
-			if icon_name is not None:
-				image = platform.image.menu_icon(icon_name)
+			if application.icon:
+				image = platform.image.menu_icon(application.icon)
 				item.set_image(image)
 
 			data = {
-				'config': config_file,
+				'application': application,
 				'selection': selection
 				}
 

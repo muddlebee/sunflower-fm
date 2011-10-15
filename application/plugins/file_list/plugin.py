@@ -16,6 +16,7 @@ from local_provider import LocalProvider
 from operation import DeleteOperation, CopyOperation, MoveOperation
 from gui.input_dialog import FileCreateDialog, DirectoryCreateDialog
 from gui.input_dialog import CopyDialog, MoveDialog, RenameDialog
+from gui.input_dialog import ApplicationSelectDialog 
 from gui.properties_window import PropertiesWindow
 from widgets.thumbnail_view import ThumbnailView
 from threading import Thread, Event
@@ -79,14 +80,14 @@ class FileList(ItemList):
 
 	def __init__(self, parent, notebook, path=None, sort_column=None, sort_ascending=True):
 		ItemList.__init__(self, parent, notebook, path, sort_column, sort_ascending)
-		
-		# event object controling path change thread
+
+		# event object controlling path change thread
 		self._thread_active = Event()
-		
+
 		# preload variables
 		self._preload_count = 0
 		self._preload_size = 0
-		
+
 		# storage system for list items
 		self._store = gtk.ListStore(
 								str,	# Column.NAME
@@ -319,7 +320,7 @@ class FileList(ItemList):
 			self._thumbnail_view.hide()
 
 	def _execute_selected_item(self, widget=None, data=None):
-		"""Execute/Open selected item/directory"""
+		"""Execute/Open selected item"""
 		selection = self._item_list.get_selection()
 		list_, iter_ = selection.get_selected()
 
@@ -346,6 +347,17 @@ class FileList(ItemList):
 			self._parent.associations_manager.execute_file(selected_file)
 
 		return True  # to prevent command or quick search in single key bindings
+	
+	def _execute_with_application(self, widget=None, data=None):
+		"""Execute/Open selected item with application user selects from the list"""
+		dialog = ApplicationSelectDialog(self._parent, '/home/meaneye/pi.py')
+		response = dialog.get_response()
+		
+		if response[0] == gtk.RESPONSE_OK:
+			self._parent.associations_manager.open_file(
+													self._get_selection_list(), 
+													exec_command=response[2]
+												)
 
 	def _open_in_new_tab(self, widget=None, data=None):
 		"""Open selected directory in new tab"""
@@ -682,12 +694,25 @@ class FileList(ItemList):
 
 		if not is_dir:
 			# get associated programs
-			mime_type = platform.filesystem.get_mime_type(filename)
+			mime_type = self._parent.associations_manager.get_mime_type(filename)
 			program_list = self._parent.menu_manager.get_items_for_type(mime_type, self._get_selection_list())
 
 			# create open with menu
 			for menu_item in program_list:
 				self._open_with_menu.append(menu_item)
+
+			# add separator if there are other menu items
+			if len(program_list) > 0:
+				separator = gtk.SeparatorMenuItem()
+				separator.show()
+				self._open_with_menu.append(separator)
+
+			# create an option for opening selection with custom command
+			open_with_other = gtk.MenuItem(_('Other application...'))
+			open_with_other.connect('activate', self._execute_with_application)
+			open_with_other.show()
+
+			self._open_with_menu.append(open_with_other)
 
 		# disable/enable items
 		has_items = len(self._open_with_menu.get_children()) > 0
@@ -1091,7 +1116,18 @@ class FileList(ItemList):
 			# time_format values
 			time_format = self._parent.options.get('main', 'time_format')
 
-			formated_file_size = locale.format('%d', file_size, True) if not is_dir else '<DIR>'
+			if not is_dir:
+				# format file size
+				if self._human_readable:
+					formated_file_size = common.format_size(file_size)
+
+				else:
+					formated_file_size = locale.format('%d', file_size, True)
+					
+			else:
+				# item is a directory
+				formated_file_size = '<DIR>'
+
 			formated_file_mode = oct(file_mode)
 			formated_file_date = time.strftime(time_format, time.localtime(file_date))
 
@@ -1200,7 +1236,7 @@ class FileList(ItemList):
 		# if there is already active thread, stop it
 		if self._thread_active.is_set():
 			self._thread_active.clear()
-			
+
 		# get number of items to preload
 		if len(self._store) > 0 and self._item_list.allocation.height != self._preload_size:
 			cell_area = self._item_list.get_cell_area(
@@ -1208,7 +1244,7 @@ class FileList(ItemList):
 										self._columns[0]
 									)
 			tree_size = self._item_list.allocation.height
-			
+
 			# calculate number of items to preload
 			if len(cell_area) >= 4 and cell_area[3] > 0:
 				self._preload_count = (tree_size / cell_area[3]) + 1
@@ -1217,10 +1253,10 @@ class FileList(ItemList):
 		# clear list
 		self._clear_list()
 
-		# cache objects and settings		
+		# cache objects and settings
 		provider = self.get_provider()
 		show_hidden = self._parent.options.getboolean('main', 'show_hidden')
-		
+
 		# assign item for selection
 		self._item_to_focus = selected
 
@@ -1231,13 +1267,13 @@ class FileList(ItemList):
 		# change path
 		if path is not None and provider.is_dir(path):
 			self.path = os.path.abspath(path)
-			
+
 		else:
 			self.path = user.home
 
 		# update GTK controls
 		path_name = os.path.basename(self.path)
-		if path_name == "": 
+		if path_name == "":
 			path_name = os.path.abspath(self.path)
 
 		self._change_tab_text(path_name)
@@ -1255,18 +1291,18 @@ class FileList(ItemList):
 		# populate list
 		try:
 			item_list = provider.list_dir(self.path)
-			
+
 			# remove hidden files if we don't need them
 			item_list = filter(lambda item_name: not (item_name[0] == '.' and not show_hidden), item_list)
-			
+
 			# sort list to prevent messing up list while
 			# adding items from a separate thread
 			item_list.sort()
-			
+
 			# split items among lists
 			preload_list = item_list[:self._preload_count]
 			item_list = item_list[self._preload_count:]
-			
+
 			# add parent option for parent directory
 			self._store.append((
 							os.path.pardir,
@@ -1288,25 +1324,33 @@ class FileList(ItemList):
 			# preload items
 			for item_name in preload_list:
 				self._add_item(item_name)
-			
+
 			# let the rest of items load in a separate thread
 			if len(item_list) > 0:
 				def thread_method():
 					# set event to active
 					self._thread_active.set()
 					
+					# show spinner animation
+					with gtk.gdk.lock:
+						self._title_bar.show_spinner()
+					
 					for item_name in item_list:
 						# check if we are allowed to continue
 						if not self._thread_active.is_set():
 							break;
-						
+
 						# add item to the list
 						with gtk.gdk.lock:
 							self._add_item(item_name)
-				
+						
+					# hide spinner animation	
+					with gtk.gdk.lock:
+						self._title_bar.hide_spinner()
+
 				self._change_path_thread = Thread(target=thread_method)
 				self._change_path_thread.start()
-
+				
 			# if no errors occurred during path change,
 			# call parent method which handles history
 			ItemList.change_path(self, path)
