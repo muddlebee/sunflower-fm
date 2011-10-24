@@ -22,7 +22,7 @@ msgstr ""
 
 #: application/gui/preferences/terminal.py:10
 #: application/plugins/system_terminal/plugin.py:41
-#: application/plugin_base/terminal.py:210
+#: application/plugin_base/terminal.py:216
 #: application/plugin_base/item_list.py:120
 msgid "Terminal"
 msgstr "Терминал"
@@ -92,8 +92,9 @@ msgstr "Посетить сайт"
 msgid ""
 "{0} is required for normal program operation and therefore can not be "
 "deactivated!"
-msgstr "Указанный модуль ('{0}') необходим для корректной работы программы и "
-"не может быть отключен!"
+msgstr ""
+"{0} необходим для корректной работы программы и поэтому не может быть "
+"отключен!"
 
 #: application/gui/preferences/bookmarks.py:10
 #: application/plugins/default_toolbar/bookmarks_button.py:16
@@ -146,12 +147,12 @@ msgid "View & Edit"
 msgstr "Просмотр и редактирование"
 
 #: application/gui/preferences/view_and_edit.py:13
-#: application/gui/main_window.py:365 application/gui/main_window.py:587
+#: application/gui/main_window.py:365 application/gui/main_window.py:586
 msgid "View"
 msgstr "Просмотр"
 
 #: application/gui/preferences/view_and_edit.py:19
-#: application/gui/main_window.py:210 application/gui/main_window.py:588
+#: application/gui/main_window.py:210 application/gui/main_window.py:587
 msgid "Edit"
 msgstr "Правка"
 
@@ -177,7 +178,7 @@ msgstr "Панель инструментов"
 
 #: application/gui/preferences/toolbar.py:28
 #: application/gui/history_list.py:43
-#: application/plugins/file_list/plugin.py:112
+#: application/plugins/file_list/plugin.py:118
 #: application/plugins/rename_extensions/default.py:73
 #: application/tools/find_files.py:82
 msgid "Name"
@@ -369,6 +370,10 @@ msgstr ""
 "Настройки быстрого поиска конфликтуют с VIM-style навигацией. Для решения"
 "этой проблемы ваши настройки быстрого поиска были возвращены к первоначальным."
 
+#: application/gui/preferences/accelerators.py:19
+msgid "Key bindings"
+msgstr "Комбинации клавиш"
+
 #: application/gui/main_window.py:90 application/gui/main_window.py:1385
 #: application/gui/changelog_dialog.py:51 application/gui/about_window.py:49
 msgid "Sunflower"
@@ -390,15 +395,15 @@ msgstr "Создать файл"
 msgid "Create directory"
 msgstr "Создать каталог"
 
-#: application/gui/main_window.py:174 application/plugin_base/item_list.py:741
+#: application/gui/main_window.py:174 application/plugin_base/item_list.py:748
 msgid "_Open"
 msgstr "Открыть"
 
-#: application/gui/main_window.py:181 application/plugin_base/item_list.py:750
+#: application/gui/main_window.py:181 application/plugin_base/item_list.py:757
 msgid "Open in new ta_b"
 msgstr "Открыть в новой вкладке"
 
-#: application/gui/main_window.py:191 application/plugin_base/item_list.py:855
+#: application/gui/main_window.py:191 application/plugin_base/item_list.py:862
 msgid "_Properties"
 msgstr "Свойства"
 
@@ -406,31 +411,31 @@ msgstr "Свойства"
 msgid "_Quit"
 msgstr "Выйти"
 
-#: application/gui/main_window.py:213 application/plugin_base/item_list.py:780
+#: application/gui/main_window.py:213 application/plugin_base/item_list.py:787
 msgid "Cu_t"
 msgstr "Вырезать"
 
-#: application/gui/main_window.py:220 application/plugin_base/item_list.py:789
+#: application/gui/main_window.py:220 application/plugin_base/item_list.py:796
 msgid "_Copy"
 msgstr "Копировать"
 
-#: application/gui/main_window.py:227 application/plugin_base/item_list.py:798
+#: application/gui/main_window.py:227 application/plugin_base/item_list.py:805
 msgid "_Paste"
 msgstr "Вставить"
 
-#: application/gui/main_window.py:237 application/plugin_base/item_list.py:812
+#: application/gui/main_window.py:237 application/plugin_base/item_list.py:819
 msgid "_Delete"
 msgstr "Удалить"
 
-#: application/gui/main_window.py:247 application/plugin_base/item_list.py:826
+#: application/gui/main_window.py:247 application/plugin_base/item_list.py:833
 msgid "Send to..."
 msgstr "Отправить..."
 
-#: application/gui/main_window.py:254 application/plugin_base/item_list.py:836
+#: application/gui/main_window.py:254 application/plugin_base/item_list.py:843
 msgid "Ma_ke link"
 msgstr "Создать сылку"
 
-#: application/gui/main_window.py:258 application/plugin_base/item_list.py:842
+#: application/gui/main_window.py:258 application/plugin_base/item_list.py:849
 msgid "_Rename..."
 msgstr "Переименовать"
 
@@ -693,7 +698,7 @@ msgid ""
 "No rename extensions were found. Please enable basic rename options plugin "
 "and try again."
 msgstr ""
-"Модули переименования не найдены. Пожалуйста, включите модуль \"basic rename options\", "
+"Модули переименования не найдены. Пожалуйста, включите модуль \"Basic rename options\", "
 "и попробуйте снова."
 
 #: application/gui/main_window.py:2384
@@ -702,7 +707,7 @@ msgid ""
 "options plugin and try again."
 msgstr ""
 "Модули поиска файлов не найдены. Пожалуйста, активируйте "
-"модуль \"basic find file\" и попробуйте снова."
+"модуль \"find_file_extensions\" и попробуйте снова."
 
 #: application/gui/preferences_window.py:28
 msgid "Preferences"
@@ -898,7 +903,7 @@ msgstr "Изменения"
 msgid "Change log was not found!"
 msgstr "Журнал изменений не найден!"
 
-#: application/gui/changelog_dialog.py:109 application/gui/about_window.py:364
+#: application/gui/changelog_dialog.py:109 application/gui/about_window.py:394
 msgid "Change log"
 msgstr "Журнал изменений"
 
@@ -1647,7 +1652,6 @@ msgstr "Выполнить выделенный объект"
 
 #: application/plugin_base/item_list.py:198
 msgid "Select application and execute item"
-msgstr "Выбрать приложение и открыть файл"
 
 #: application/plugin_base/item_list.py:199
 msgid "Show selected item properties"
