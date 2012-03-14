@@ -1202,6 +1202,8 @@ class ItemList(PluginBase):
 			selected_items = self._dirs['selected'] + self._files['selected']
 			(self._hide_status_bar, self._show_status_bar)[selected_items > 0]()
 
+		return True
+
 	def _select_range(self, start_path, end_path):
 		"""Set items in range to status oposite from frist item in selection"""
 		if self._parent.options.getint('main', 'show_status_bar') == StatusVisible.WHEN_NEEDED:
@@ -1239,6 +1241,8 @@ class ItemList(PluginBase):
 		else:
 			self.change_path(oposite_object.path)
 
+		return True
+
 	def _inherit_right_path(self, widget, data=None):
 		"""Inherit path in left list from right"""
 		oposite_object = self._parent.get_oposite_object(self)
@@ -1252,6 +1256,8 @@ class ItemList(PluginBase):
 
 		else:
 			self.change_path(oposite_object.path)
+
+		return True
 
 	def _swap_paths(self, widget, data=None):
 		"""Swap left and right paths"""
