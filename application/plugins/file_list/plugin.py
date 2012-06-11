@@ -428,7 +428,6 @@ class FileList(ItemList):
 				# add directory manually to the list in case
 				# where directory monitoring is not supported
 				if self._fs_monitor is None:
-					show_hidden = self._parent.options.getboolean('main', 'show_hidden')
 					self._add_item(response[1])
 
 			except OSError as error:
@@ -478,7 +477,6 @@ class FileList(ItemList):
 				# add file manually to the list in case
 				# where directory monitoring is not supported
 				if self._fs_monitor is None:
-					show_hidden = self._parent.options.getboolean('main', 'show_hidden')
 					self._add_item(response[1])
 
 				# create file from template
@@ -888,7 +886,7 @@ class FileList(ItemList):
 		if event is MonitorSignals.CREATED:
 			# temporarily fix problem with duplicating items when file was saved with GIO
 			if self._find_iter_by_name(path) is None:
-				if path[0] == '.' and not show_hidden:
+				if (not show_hidden) and (path[0] == '.' or path[-1] == '~'):
 					return
 
 				self._add_item(path)
@@ -1389,7 +1387,10 @@ class FileList(ItemList):
 			item_list = provider.list_dir(self.path)
 
 			# remove hidden files if we don't need them
-			item_list = filter(lambda item_name: not (item_name[0] == '.' and not show_hidden), item_list)
+			item_list = filter(
+			               lambda item_name: show_hidden or (item_name[0] != '.' and item_name[-1] != '~'),
+			               item_list
+			             )
 
 			# sort list to prevent messing up list while
 			# adding items from a separate thread
