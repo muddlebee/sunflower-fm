@@ -4,6 +4,13 @@ from common import AccessModeFormat
 from widgets.settings_page import SettingsPage
 
 
+class Column:
+	NAME = 0
+	TYPE = 1
+	SIZE = 3
+	VISIBLE = 2
+
+
 class ItemListOptions(SettingsPage):
 	"""Options related to item lists"""
 
@@ -15,13 +22,16 @@ class ItemListOptions(SettingsPage):
 		# create frames
 		label_look_and_feel = gtk.Label(_('Look & feel'))
 		label_operation = gtk.Label(_('Operation'))
+		label_columns = gtk.Label(_('Columns'))
 
 		# vertical boxes
 		vbox_look_and_feel = gtk.VBox(False, 0)
 		vbox_operation = gtk.VBox(False, 0)
+		vbox_columns = gtk.VBox(False, 0)
 
 		vbox_look_and_feel.set_border_width(5)
 		vbox_operation.set_border_width(5)
+		vbox_columns.set_border_width(5)
 
 		# file list options
 		self._checkbox_row_hinting = gtk.CheckButton(_('Row hinting'))
@@ -110,7 +120,40 @@ class ItemListOptions(SettingsPage):
 								)
 		self._entry_time_format.connect('changed', self._parent.enable_save)
 
+		# create columns editor
+		container = gtk.ScrolledWindow()
+		container.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
+		container.set_shadow_type(gtk.SHADOW_IN)
+
+		self._columns_store = gtk.ListStore(str, int, int, bool)
+		self._columns_list = gtk.TreeView()
+
+		self._columns_list.set_model(self._columns_store)
+		self._columns_list.set_rules_hint(True)
+		self._columns_list.set_enable_search(True)
+		self._columns_list.set_search_column(Column.NAME)
+
+		cell_name = gtk.CellRendererText()
+		cell_size = gtk.CellRendererText()
+		cell_visible = gtk.CellRendererToggle()
+
+		col_name = gtk.TreeViewColumn(_('Column'), cell_name, text=Column.NAME)
+		col_name.set_min_width(300)
+		col_name.set_resizable(True)
+
+		col_size = gtk.TreeViewColumn(_('Size'), cell_size, text=Column.SIZE)
+		col_size.set_min_width(50)
+
+		col_visible = gtk.TreeViewColumn(_('Visible'), cell_visible, active=Column.VISIBLE)
+		col_visible.set_min_width(50)
+
+		self._columns_list.append_column(col_name)
+		self._columns_list.append_column(col_size)
+		self._columns_list.append_column(col_visible)
+
 		# pack interface
+		container.add(self._columns_list)
+
 		hbox_selection_color.pack_start(label_selection_color, False, False, 0)
 		hbox_selection_color.pack_start(self._button_selection_color, False, False, 0)
 
@@ -143,8 +186,11 @@ class ItemListOptions(SettingsPage):
 		vbox_operation.pack_start(hbox_quick_search, False, False, 5)
 		vbox_operation.pack_start(vbox_time_format, False, False, 5)
 
+		vbox_columns.pack_start(container, True, True, 0)
+
 		notebook.append_page(vbox_look_and_feel, label_look_and_feel)
 		notebook.append_page(vbox_operation, label_operation)
+		#notebook.append_page(vbox_columns, label_columns)
 
 		self.pack_start(notebook, True, True, 0)
 
@@ -179,8 +225,10 @@ class ItemListOptions(SettingsPage):
 	def _load_options(self):
 		"""Load item list options"""
 		options = self._application.options
+		plugin_options = self._application.plugin_options
 		section = options.section('item_list')
 
+		# load options
 		self._checkbox_row_hinting.set_active(section.get('row_hinting'))
 		self._checkbox_show_hidden.set_active(section.get('show_hidden'))
 		self._checkbox_case_sensitive.set_active(section.get('case_sensitive_sort'))
@@ -198,6 +246,16 @@ class ItemListOptions(SettingsPage):
 		self._checkbox_control.set_active(search_modifier[0] == '1')
 		self._checkbox_alt.set_active(search_modifier[1] == '1')
 		self._checkbox_shift.set_active(search_modifier[2] == '1')
+
+		# load columns
+		#if plugin_options.has_section('FileList'):
+		#	columns = plugin_options.section('columns')
+
+		#	for column_name in columns:
+		#		option_name = 'size_{0}'.format(column_name)
+		#		size = columns.get(option_name) if columns.has(option_name) else None
+
+		#		self._columns_store.append((column_name, 0, size, True))
 
 	def _save_options(self):
 		"""Save item list options"""
