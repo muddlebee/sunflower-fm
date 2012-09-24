@@ -55,7 +55,7 @@ class MainWindow(gtk.Window):
 	version = {
 			'major': 0,
 			'minor': 1,
-			'build': 43,
+			'build': 44,
 			'stage': 'a'
 		}
 
@@ -2022,6 +2022,7 @@ class MainWindow(gtk.Window):
 					'expand_tabs': 0,
 					'show_notifications': True,
 					'ubuntu_coloring': False,
+					'superuser_notification': True,
 					'tab_close_button': True,
 					'show_status_bar': 0,
 					'human_readable_size': True,
