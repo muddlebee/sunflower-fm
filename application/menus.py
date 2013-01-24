@@ -13,9 +13,6 @@ class MenuManager:
 	def __init__(self, application):
 		self._application = application
 
-		self._accel_group = gtk.AccelGroup()
-		self._application.add_accel_group(self._accel_group)
-
 	def _item_normal(self, item):
 		"""Create normal menu item"""
 		return gtk.MenuItem(label = item['label'], use_underline = True)
@@ -30,11 +27,7 @@ class MenuManager:
 
 	def _item_radio(self, item):
 		"""Create radio menu item"""
-		if item.has_key('group'):
-			group = item['group']
-		else:
-			group = None
-
+		group = item['group'] if 'group' in item else None
 		return gtk.RadioMenuItem(group, item['label'], use_underline = True)
 
 	def _item_separator(self, item):
@@ -46,10 +39,10 @@ class MenuManager:
 		result = gtk.ImageMenuItem()
 		image = gtk.Image()
 
-		if item.has_key('image'):
+		if 'image' in item:
 			image.set_from_icon_name(item['image'], gtk.ICON_SIZE_MENU)
 
-		elif item.has_key('stock'):
+		elif 'stock' in item:
 			image.set_from_stock(item['stock'], gtk.ICON_SIZE_MENU)
 
 		try:
@@ -87,10 +80,6 @@ class MenuManager:
 		
 		if method is not None:
 			method(data['mime_type'], data['selection'], data['provider'])
-
-	def get_accel_group(self):
-		"""Return accelerator group"""
-		return self._accel_group
 
 	def get_item_by_name(self, name):
 		"""Get menu by specified name"""
@@ -179,40 +168,41 @@ class MenuManager:
 
 		return result
 
-	def create_menu_item(self, item):
+	def create_menu_item(self, item, accel_group=None):
 		"""Create new menu item from definition"""
 
 		# ensure we don't get confused with item type
-		if item.has_key('type'):
-			item_type = item['type']
-		else:
-			item_type = 'item'
+		item_type = item['type'] if 'type' in item else 'item'
 
-		# item type creator calls
-		create_item_call = {
-			'item': self._item_normal,
-			'checkbox': self._item_checkbox,
-			'radio': self._item_radio,
-			'separator': self._item_separator,
-			'image': self._item_image
-		}
-
-		# create item
-		new_item = create_item_call[item_type](item)
+		# create new item
+		new_item = {
+				'item': self._item_normal,
+				'checkbox': self._item_checkbox,
+				'radio': self._item_radio,
+				'separator': self._item_separator,
+				'image': self._item_image
+			}[item_type](item)
 
 		# if item has children then make submenu
-		if item_type is not 'separator' and item.has_key('submenu'):
+		if item_type is not 'separator' and 'submenu' in item:
 			submenu = gtk.Menu()
-			submenu.set_accel_group(self._accel_group)
+
+			if accel_group is None:
+				# no accelerator group was specified, use main window
+				self._application._accel_group.add_menu(submenu)
+
+			else:
+				# connect submenu to specified accelerator group
+				submenu.set_accel_group(accel_group)
 
 			for sub_item in item['submenu']:
-				submenu.append(self.create_menu_item(sub_item))
+				submenu.append(self.create_menu_item(sub_item, accel_group))
+
 			new_item.set_submenu(submenu)
 
 		# connect signals
-		if item.has_key('callback'):
-			data = None
-			if item.has_key('data'): data = item['data']
+		if 'callback' in item:
+			data = item['data'] if 'data' in item else None
 
 			if item_type is 'checkbox':
 				# connect checkbox event
@@ -226,24 +216,24 @@ class MenuManager:
 				# connect on click event
 				new_item.connect('activate', item['callback'], data)
 
-		elif not item.has_key('callback') and not item.has_key('submenu'):
+		elif not 'submenu' in item:
 			# item doesn't have a callback, so we disable it
 			new_item.set_sensitive(False)
 
 		# if menu should be right aligned
-		if item.has_key('right') and item['right']:
+		if 'right' in item and item['right']:
 			new_item.set_right_justified(item['right'])
 
 		# add item if name is specified
-		if item.has_key('name'):
+		if 'name' in item:
 			self._named_items[item['name']] = new_item
 
 		# set accelerator path
-		if item.has_key('path'):
+		if 'path' in item:
 			new_item.set_accel_path(item['path'])
 
 		# set initial item visibility
-		visible = item['visible'] if item.has_key('visible') else True
+		visible = item['visible'] if 'visible' in item else True
 
 		try:
 			# try using newer method

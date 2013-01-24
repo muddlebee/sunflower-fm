@@ -1,7 +1,6 @@
 import os
 import gtk
 import time
-import locale
 import user
 import fnmatch
 import common
@@ -98,23 +97,14 @@ class FileList(ItemList):
 								bool,	# Column.IS_PARENT_DIR
 								str,	# Column.COLOR
 								str,	# Column.ICON
-								gtk.gdk.Pixbuf  # Column.SELECTED
+								bool	# Column.SELECTED
 							)
 
 		# set item list model
 		self._item_list.set_model(self._store)
 
-		# selection image
-		image = gtk.Image()
-		image.set_from_file(os.path.abspath(os.path.join(
-									'images',
-									'selection_arrow.png'
-								)))
-
-		self._pixbuf_selection = image.get_pixbuf()
-
 		# create columns
-		cell_selected = gtk.CellRendererPixbuf()
+		cell_selected = gtk.CellRendererText()
 		cell_icon = gtk.CellRendererPixbuf()
 		cell_name = gtk.CellRendererText()
 		cell_extension = gtk.CellRendererText()
@@ -122,7 +112,8 @@ class FileList(ItemList):
 		cell_mode = gtk.CellRendererText()
 		cell_date = gtk.CellRendererText()
 
-		cell_selected.set_property('width', 6)
+		cell_selected.set_property('width', 30)  # leave enough room for various characters
+		cell_selected.set_property('xalign', 1)
 		cell_extension.set_property('size-points', 8)
 		cell_size.set_property('size-points', 8)
 		cell_size.set_property('xalign', 1)
@@ -153,12 +144,13 @@ class FileList(ItemList):
 		col_date.pack_start(cell_date, True)
 
 		col_name.add_attribute(cell_name, 'foreground', Column.COLOR)
+		col_name.set_cell_data_func(cell_selected, self._selected_data_func)
 		col_extension.add_attribute(cell_extension, 'foreground', Column.COLOR)
 		col_size.add_attribute(cell_size, 'foreground', Column.COLOR)
 		col_mode.add_attribute(cell_mode, 'foreground', Column.COLOR)
 		col_date.add_attribute(cell_date, 'foreground', Column.COLOR)
 
-		col_name.add_attribute(cell_selected, 'pixbuf', Column.SELECTED)
+		# col_name.add_attribute(cell_selected, 'pixbuf', Column.SELECTED)
 		col_name.add_attribute(cell_icon, 'icon-name', Column.ICON)
 		col_name.add_attribute(cell_name, 'text', Column.FORMATED_NAME)
 		col_extension.add_attribute(cell_extension, 'text', Column.EXTENSION)
@@ -223,7 +215,7 @@ class FileList(ItemList):
 		class_list = self._parent.get_column_extension_classes(self.__class__)
 
 		for ExtensionClass in class_list:
-			column = ExtensionsClass(self, self._store).get_column()
+			column = ExtensionClass(self, self._store).get_column()
 			if column is not None:
 				self._item_list.append_column(column)
 
@@ -448,7 +440,6 @@ class FileList(ItemList):
 		# get response
 		response = dialog.get_response()
 		mode = dialog.get_mode()
-		is_hidden = response[1][0] == '.'
 
 		# create dialog
 		if response[0] == gtk.RESPONSE_OK:
@@ -461,6 +452,8 @@ class FileList(ItemList):
 
 				# add directory manually to the list in case
 				# where directory monitoring is not supported
+				is_hidden = response[1][0] == '.'
+
 				if self._fs_monitor is None:
 					if is_hidden and show_hidden \
 					or not is_hidden:
@@ -494,7 +487,6 @@ class FileList(ItemList):
 		mode = dialog.get_mode()
 		edit_after = dialog.get_edit_file()
 		template = dialog.get_template_file()
-		is_hidden = response[1][0] == '.'
 
 		# create dialog
 		if response[0] == gtk.RESPONSE_OK:
@@ -514,6 +506,8 @@ class FileList(ItemList):
 
 				# add file manually to the list in case
 				# where directory monitoring is not supported
+				is_hidden = response[1][0] == '.'
+
 				if self._fs_monitor is None:
 					if is_hidden and show_hidden \
 					or not is_hidden:
@@ -550,7 +544,7 @@ class FileList(ItemList):
 
 		return True
 
-	def _delete_files(self, widget=None, data=None):
+	def _delete_files(self, widget=None, force_delete=None):
 		"""Delete selected files"""
 		selection = self._get_selection_list(relative=True)
 
@@ -560,21 +554,35 @@ class FileList(ItemList):
 
 		# check if user has disabled dialog
 		show_dialog = self._parent.options.section('confirmations').get('delete_items')
+		trash_items = self._parent.options.section('operations').get('trash_files')
 
 		if show_dialog:
+			# get context sensitive message
+			if force_delete or not trash_items:
+				message = ngettext(
+						 	"You are about to delete {0} item.\n"
+						 	"Are you sure about this?",
+						 	"You are about to delete {0} items.\n"
+						 	"Are you sure about this?",
+						 	len(selection)
+						 ) 
+
+			else:
+				message = ngettext(
+						 	"You are about to move {0} item to trash.\n"
+						 	"Are you sure about this?",
+						 	"You are about to move {0} items to trash.\n"
+						 	"Are you sure about this?",
+						 	len(selection)
+						 ) 
+
 			# user has confirmation dialog enabled
 			dialog = gtk.MessageDialog(
 									self._parent,
 									gtk.DIALOG_DESTROY_WITH_PARENT,
 									gtk.MESSAGE_QUESTION,
 									gtk.BUTTONS_YES_NO,
-									ngettext(
-										"You are about to remove {0} item.\n"
-										"Are you sure about this?",
-										"You are about to remove {0} items.\n"
-										"Are you sure about this?",
-										len(selection)
-									).format(len(selection))
+									message.format(len(selection))
 								)
 			dialog.set_default_response(gtk.RESPONSE_YES)
 			result = dialog.run()
@@ -592,6 +600,9 @@ class FileList(ItemList):
 									self._parent,
 									self.get_provider()
 								)
+			if force_delete:
+				operation.set_force_delete(True)
+
 			operation.set_selection(selection)
 			operation.start()
 
@@ -794,8 +805,7 @@ class FileList(ItemList):
 
 		else:
 			for row in self._store:
-				if row[Column.COLOR] is not None \
-				and ((not files_only) or (files_only and not row[Column.IS_DIR])):
+				if row[Column.SELECTED] and ((not files_only) or (files_only and not row[Column.IS_DIR])):
 					value = row[Column.NAME] if relative else os.path.join(self.path, row[Column.NAME])
 					result.append(value)
 
@@ -1016,6 +1026,21 @@ class FileList(ItemList):
 
 		return True
 
+	def _select_all(self, widget, data=None):
+		"""Proxy method for selecting all items"""
+		self.select_all()
+		return True
+
+	def _deselect_all(self, widget, data=None):
+		"""Proxy method for deselecting all items"""
+		self.deselect_all()
+		return True
+
+	def _invert_selection(self, widget, data=None):
+		"""Proxy method for selecting all items"""
+		self.invert_selection()
+		return True
+
 	def _toggle_selection(self, widget, data=None, advance=True):
 		"""Toggle item selection"""
 		selection = self._item_list.get_selection()
@@ -1027,21 +1052,17 @@ class FileList(ItemList):
 
 		if not is_parent:
 			# get current status of iter
-			selected = item_list.get_value(selected_iter, Column.COLOR) is not None
+			selected = not item_list.get_value(selected_iter, Column.SELECTED)
+			color = (None, self._selection_color)[selected]
 
 			if is_dir:
-				self._dirs['selected'] += [1, -1][selected]
+				self._dirs['selected'] += [-1, 1][selected]
 			else:
-				self._files['selected'] += [1, -1][selected]
-				self._size['selected'] += [1, -1][selected] * size
+				self._files['selected'] += [-1, 1][selected]
+				self._size['selected'] += [-1, 1][selected] * size
 
-			# toggle selection
-			selected = not selected
-
-			value = (None, self._selection_color)[selected]
-			image = (None, self._pixbuf_selection)[selected]
-			item_list.set_value(selected_iter, Column.COLOR, value)
-			item_list.set_value(selected_iter, Column.SELECTED, image)
+			item_list.set_value(selected_iter, Column.COLOR, color)
+			item_list.set_value(selected_iter, Column.SELECTED, selected)
 
 		# update status bar
 		ItemList._toggle_selection(self, widget, data, advance)
@@ -1058,13 +1079,12 @@ class FileList(ItemList):
 		return True
 
 	def _select_range(self, start_path, end_path):
-		"""Set items in range to status opposite from frist item in selection"""
+		"""Set items in range to status opposite from first item in selection"""
 		if len(self._store) == 1:  # exit when list doesn't have items
 			return
 
 		# get current selection
-		start_iter = self._store.get_iter(start_path)
-		new_status = not (self._store.get_value(start_iter, Column.COLOR) is not None)
+		current_iter = self._store.get_iter(start_path)
 
 		# swap paths if selecting from bottom up
 		if start_path[0] > end_path[0]:
@@ -1075,23 +1095,23 @@ class FileList(ItemList):
 			start_path = (1, )
 
 		# values to be set in columns
-		value = (None, self._selection_color)[new_status]
-		image = (None, self._pixbuf_selection)[new_status]
+		selected = not self._store.get_value(current_iter, Column.SELECTED)
+		color = (None, self._selection_color)[selected]
 
 		for index in xrange(start_path[0], end_path[0] + 1):
-			current_iter = self._store.get_iter((index,))
+			current_iter = self._store.get_iter((index, ))
 
 			# get current iter information
 			size = self._store.get_value(current_iter, Column.SIZE)
 			is_dir = self._store.get_value(current_iter, Column.IS_DIR)
-			status = self._store.get_value(current_iter, Column.COLOR) is not None
+			status = self._store.get_value(current_iter, Column.SELECTED)
 
 			# set selection
-			self._store.set_value(current_iter, Column.COLOR, value)
-			self._store.set_value(current_iter, Column.SELECTED, image)
+			self._store.set_value(current_iter, Column.COLOR, color)
+			self._store.set_value(current_iter, Column.SELECTED, selected)
 
 			# modify counters only when status is changed
-			if new_status is not status:
+			if selected is not status:
 				if is_dir:
 					self._dirs['selected'] += [1, -1][status]
 				else:
@@ -1112,6 +1132,11 @@ class FileList(ItemList):
 			self._parent.associations_manager.edit_file(selection_list)
 
 		return True
+
+	def _selected_data_func(self, column, cell, store, selected_iter, data=None):
+		"""Handle setting selected identifier"""
+		selected = store.get_value(selected_iter, Column.SELECTED)
+		cell.set_property('text', (None, self._selection_indicator)[selected])
 
 	def _find_iter_by_name(self, name):
 		""" Find and return item by name"""
@@ -1164,12 +1189,7 @@ class FileList(ItemList):
 				if self._show_full_name:
 					file_info = (filename, file_info[1])
 
-				if self._human_readable:
-					formated_file_size = common.format_size(file_size)
-
-				else:
-					formated_file_size = locale.format('%d', file_size, True)
-
+				formated_file_size = common.format_size(file_size, self._size_format, False)
 
 			else:
 				# item is a directory
@@ -1240,7 +1260,7 @@ class FileList(ItemList):
 				self._dirs['count'] -= 1
 
 				# update selected counters
-				if item_list.get_value(found_iter, Column.SELECTED) is not None:
+				if item_list.get_value(found_iter, Column.SELECTED):
 					self._dirs['selected'] -= 1
 
 			else:
@@ -1248,7 +1268,7 @@ class FileList(ItemList):
 				self._size['total'] -= item_list.get_value(found_iter, Column.SIZE)
 
 				# update selected counters
-				if item_list.get_value(found_iter, Column.SELECTED) is not None:
+				if item_list.get_value(found_iter, Column.SELECTED):
 					self._files['selected'] -= 1
 					self._size['selected'] -= item_list.get_value(found_iter, Column.SIZE)
 
@@ -1271,11 +1291,7 @@ class FileList(ItemList):
 
 			if not is_dir:
 				# format file size
-				if self._human_readable:
-					formated_file_size = common.format_size(file_size)
-
-				else:
-					formated_file_size = locale.format('%d', file_size, True)
+				formated_file_size = common.format_size(file_size, self._size_format, False)
 
 			else:
 				# item is a directory
@@ -1312,16 +1328,11 @@ class FileList(ItemList):
 		if text is None: text = self.path
 
 		system_size = self.get_provider().get_system_size(self.path)
+		size_available = common.format_size(system_size.size_available, self._size_format)
+		size_total = common.format_size(system_size.size_total, self._size_format)
 
 		self._title_bar.set_title(text)
-		self._title_bar.set_subtitle(
-									'{2} {0} - {3} {1}'.format(
-															common.format_size(system_size.size_available),
-															common.format_size(system_size.size_total),
-															_('Free:'),
-															_('Total:')
-														)
-								)
+		self._title_bar.set_subtitle('{2} {0} - {3} {1}'.format(size_available, size_total, _('Free:'), _('Total:')))
 
 	def _drag_data_received(self, widget, drag_context, x, y, selection_data, info, timestamp):
 		"""Handle dropping files on file list"""
@@ -1617,7 +1628,6 @@ class FileList(ItemList):
 		files = 0
 		size = 0L
 		result = 0
-		color = self._selection_color
 
 		for row in self._store:
 			# set selection
@@ -1625,18 +1635,18 @@ class FileList(ItemList):
 			and fnmatch.fnmatch(row[Column.NAME], pattern) \
 			and row[Column.NAME] not in exclude_list:
 				# select item that matched out criteria
-				row[Column.COLOR] = color
-				row[Column.SELECTED] = self._pixbuf_selection
+				row[Column.COLOR] = self._selection_color
+				row[Column.SELECTED] = True
 
 				result += 1
 
 			elif len(exclude_list) > 0:
 				# if out exclude list has items, we need to deselect them
 				row[Column.COLOR] = None
-				row[Column.SELECTED] = None
+				row[Column.SELECTED] = False
 
 			# update dir/file count
-			if row[Column.COLOR] is not None:
+			if row[Column.SELECTED]:
 				if row[Column.IS_DIR]:
 					dirs += 1
 				else:
@@ -1653,8 +1663,8 @@ class FileList(ItemList):
 
 		return result
 
-	def unselect_all(self, pattern=None):
-		"""Unselect items matching the pattern"""
+	def deselect_all(self, pattern=None):
+		"""Deselect items matching the pattern"""
 		if pattern is None:
 			pattern = "*"
 
@@ -1667,12 +1677,12 @@ class FileList(ItemList):
 			# set selection
 			if not row[Column.IS_PARENT_DIR] and fnmatch.fnmatch(row[Column.NAME], pattern):
 				row[Column.COLOR] = None
-				row[Column.SELECTED] = None
+				row[Column.SELECTED] = False
 
 				result += 1
 
 			# update dir/file count
-			if row[Column.COLOR] is not None:
+			if row[Column.SELECTED]:
 				if row[Column.IS_DIR]:
 					dirs += 1
 				else:
@@ -1702,15 +1712,15 @@ class FileList(ItemList):
 		for row in self._store:
 			# set selection
 			if not row[Column.IS_PARENT_DIR] and fnmatch.fnmatch(row[Column.NAME], pattern):
-				if row[Column.COLOR] is None:
+				if not row[Column.SELECTED]:
 					row[Column.COLOR] = self._selection_color
-					row[Column.SELECTED] = self._pixbuf_selection
+					row[Column.SELECTED] = True
 				else:
 					row[Column.COLOR] = None
-					row[Column.SELECTED] = None
+					row[Column.SELECTED] = False
 
 			# update dir/file count
-			if row[Column.COLOR] is not None:
+			if row[Column.SELECTED]:
 				if row[Column.IS_DIR]:
 					dirs += 1
 				else:
