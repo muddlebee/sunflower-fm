@@ -17,6 +17,7 @@ from associations import AssociationManager
 from indicator import Indicator
 from notifications import NotificationManager
 from toolbar import ToolbarManager
+from accelerator_group import AcceleratorGroup
 from accelerator_manager import AcceleratorManager
 from keyring import KeyringManager, InvalidKeyringError
 from parameters import Parameters
@@ -43,7 +44,6 @@ except:
 from gui.about_window import AboutWindow
 from gui.preferences_window import PreferencesWindow
 from gui.preferences.display import TabExpand
-from gui.changelog_dialog import ChangeLogDialog
 from gui.input_dialog import InputDialog, AddBookmarkDialog
 from gui.keyring_manager_window import KeyringManagerWindow
 
@@ -56,7 +56,7 @@ class MainWindow(gtk.Window):
 	version = {
 			'major': 0,
 			'minor': 1,
-			'build': 51,
+			'build': 52,
 			'stage': 'a'
 		}
 
@@ -72,6 +72,7 @@ class MainWindow(gtk.Window):
 		# local variables
 		self._geometry = None
 		self._active_object = None
+		self._accel_group = None
 
 		# load translations
 		self._load_translation()
@@ -131,9 +132,6 @@ class MainWindow(gtk.Window):
 		# load config
 		self.load_config()
 
-		# call version specific actions
-		self._version_specific_actions()
-
 		# connect delete event to main window
 		if self.window_options.section('main').get('hide_on_close'):
 			self.connect('delete-event', self._delete_event)
@@ -173,6 +171,7 @@ class MainWindow(gtk.Window):
 					},
 					{
 						'label': _('Create file'),
+						'name': 'create_file',
 						'type': 'image',
 						'stock': gtk.STOCK_NEW,
 						'callback': self._command_create,
@@ -181,6 +180,7 @@ class MainWindow(gtk.Window):
 					},
 					{
 						'label': _('Create directory'),
+						'name': 'create_directory',
 						'type': 'image',
 						'image': 'folder-new',
 						'callback': self._command_create,
@@ -298,6 +298,7 @@ class MainWindow(gtk.Window):
 					},
 					{
 						'label': _('_Preferences'),
+						'name': 'show_preferences',
 						'type': 'image',
 						'stock': gtk.STOCK_PREFERENCES,
 						'callback': self.preferences_window._show,
@@ -316,9 +317,9 @@ class MainWindow(gtk.Window):
 						'path': '<Sunflower>/Mark/SelectAll',
 					},
 					{
-						'label': _('_Unselect all'),
-						'callback': self.unselect_all,
-						'path': '<Sunflower>/Mark/UnselectAll',
+						'label': _('_Deselect all'),
+						'callback': self.deselect_all,
+						'path': '<Sunflower>/Mark/DeselectAll',
 					},
 					{
 						'label': _('Invert select_ion'),
@@ -328,28 +329,33 @@ class MainWindow(gtk.Window):
 					{'type': 'separator'},
 					{
 						'label': _('S_elect with pattern'),
+						'name': 'select_with_pattern',
 						'callback': self.select_with_pattern,
 						'path': '<Sunflower>/Mark/SelectPattern',
 					},
 					{
-						'label': _('Unselect with pa_ttern'),
-						'callback': self.unselect_with_pattern,
-						'path': '<Sunflower>/Mark/UnselectPattern',
+						'label': _('Deselect with pa_ttern'),
+						'name': 'deselect_with_pattern',
+						'callback': self.deselect_with_pattern,
+						'path': '<Sunflower>/Mark/DeselectPattern',
 					},
 					{'type': 'separator'},
 					{
 						'label': _('Select with same e_xtension'),
+						'name': 'select_with_same_extension',
 						'callback': self.select_with_same_extension,
 						'path': '<Sunflower>/Mark/SelectWithSameExtension',
 					},
 					{
-						'label': _('Unselect with same exte_nsion'),
-						'callback': self.unselect_with_same_extension,
-						'path': '<Sunflower>/Mark/UnselectWithSameExtension',
+						'label': _('Deselect with same exte_nsion'),
+						'name': 'deselect_with_same_extension',
+						'callback': self.deselect_with_same_extension,
+						'path': '<Sunflower>/Mark/DeselectWithSameExtension',
 					},
 					{'type': 'separator'},
 					{
 						'label': _('Compare _directories'),
+						'name': 'compare_directories',
 						'callback': self.compare_directories,
 						'path': '<Sunflower>/Mark/Compare',
 					}
@@ -361,6 +367,7 @@ class MainWindow(gtk.Window):
 				'submenu': (
 					{
 						'label': _('Find files'),
+						'name': 'find_files',
 						'type': 'image',
 						'image': 'system-search',
 						'path': '<Sunflower>/Tools/FindFiles',
@@ -368,26 +375,31 @@ class MainWindow(gtk.Window):
 					},
 					{
 						'label': _('Find duplicate files'),
+						'name': 'find_duplicate_files',
 						'path': '<Sunflower>/Tools/FindDuplicateFiles'
 					},
 					{
 						'label': _('Synchronize directories'),
+						'name': 'synchronize_directories',
 						'path': '<Sunflower>/Tools/SynchronizeDirectories'
 					},
 					{'type': 'separator'},
 					{
 						'label': _('Advanced rename'),
+						'name': 'advanced_rename',
 						'path': '<Sunflower>/Tools/AdvancedRename',
 						'callback': self.show_advanced_rename,
 					},
 					{'type': 'separator'},
 					{
 						'label': _('Mount manager'),
+						'name': 'mount_manager',
 						'path': '<Sunflower>/Tools/MountManager',
 						'callback': self.mount_manager.show,
 					},
 					{
 						'label': _('Keyring manager'),
+						'name': 'keyring_manager',
 						'path': '<Sunflower>/Tools/KeyringManager',
 						'callback': self.show_keyring_manager,
 					}
@@ -481,12 +493,14 @@ class MainWindow(gtk.Window):
 						'type': 'image',
 						'stock': gtk.STOCK_HOME,
 						'callback': self.goto_web,
-						'data': 'rcf-group.com',
+						'data': 'code.google.com/p/sunflower-fm',
 						'path': '<Sunflower>/Help/HomePage',
 					},
 					{
 						'label': _('Check for new version'),
+						'name': 'check_for_new_version',
 						'callback': self.check_for_new_version,
+						'path': '<Sunflower>/Help/CheckVersion',
 					},
 					{'type': 'separator'},
 					{
@@ -509,6 +523,9 @@ class MainWindow(gtk.Window):
 			},
 		)
 
+		# create main menu accelerators group
+		self.configure_accelerators(menu_items)
+
 		# add items to main menu
 		for item in menu_items:
 			self.menu_bar.append(self.menu_manager.create_menu_item(item))
@@ -524,9 +541,6 @@ class MainWindow(gtk.Window):
 		self._menu_item_no_operations = self.menu_manager.get_item_by_name('no_operations')
 
 		self.menu_operations = self._menu_item_operations.get_submenu()
-
-		# load accelerator map
-		self.load_accel_map(os.path.join(self.config_path, 'accel_map'))
 
 		# create toolbar
 		self.toolbar_manager.load_config(self.toolbar_options)
@@ -601,6 +615,7 @@ class MainWindow(gtk.Window):
 		self.command_edit.connect('activate', self.execute_command)
 		self.command_edit.connect('key-press-event', self._command_edit_key_press)
 		self.command_edit.connect('focus-in-event', self._command_edit_focused)
+		self.command_edit.connect('focus-out-event', self._command_edit_lost_focus)
 		self.command_edit.show()
 
 		# load history file
@@ -679,6 +694,9 @@ class MainWindow(gtk.Window):
 		# create toolbar widgets
 		self.toolbar_manager.create_widgets()
 
+		# activate accelerators
+		self._accel_group.activate(self)
+
 		# show widgets
 		self.show_all()
 
@@ -749,7 +767,7 @@ class MainWindow(gtk.Window):
 					)
 			self.bookmarks.add_menu_item(
 						_('Edit bookmarks'),
-						'bookmarks',
+						None,
 						self.preferences_window._show,
 						'bookmarks'
 					)
@@ -858,9 +876,6 @@ class MainWindow(gtk.Window):
 		if self.window.get_state() == 0:
 			self._geometry = self.get_size() + self.get_position()
 
-		# hide bookmarks menu
-		self.bookmarks.close()
-
 	def _handle_window_state_event(self, widget, event):
 		"""Handle window state change"""
 		in_fullscreen = event.new_window_state is gtk.gdk.WINDOW_STATE_FULLSCREEN
@@ -892,11 +907,22 @@ class MainWindow(gtk.Window):
 	def _transfer_focus(self, notebook, data=None):
 		"""Transfer focus from notebook to child widget in active tab"""
 		selected_page = notebook.get_nth_page(notebook.get_current_page())
-		selected_page._main_object.grab_focus()
+		selected_page.focus_main_object()
 
 	def _toggle_show_hidden_files(self, widget, data=None):
 		"""Transfer option event to all the lists"""
-		self.options.section('item_list').set('show_hidden', widget.get_active())
+		section = self.options.section('item_list')
+		menu_item = self.menu_manager.get_item_by_name('show_hidden_files')
+
+		# NOTE: Calling set_active emits signal causing deadloop,
+		# to work around this issue we check if calling widget is menu item.
+		if widget is menu_item:
+			show_hidden = menu_item.get_active()
+			section.set('show_hidden', show_hidden)
+
+		else:
+			menu_item.set_active(not section.get('show_hidden'))
+			return True
 
 		# update left notebook
 		for index in range(0, self.left_notebook.get_n_pages()):
@@ -911,31 +937,67 @@ class MainWindow(gtk.Window):
 
 			if hasattr(page, 'refresh_file_list'):
 				page.refresh_file_list(widget, data)
+
+		return True
 
 	def _toggle_show_command_bar(self, widget, data=None):
 		"""Show/hide command bar"""
-		show_command_bar = widget.get_active()
+		menu_item = self.menu_manager.get_item_by_name('show_command_bar')
 
-		self.options.set('show_command_bar', show_command_bar)
-		self.command_bar.set_visible(show_command_bar)
+		# NOTE: Calling set_active emits signal causing deadloop,
+		# to work around this issue we check if calling widget is menu item.
+		if widget is menu_item:
+			show_command_bar = menu_item.get_active()
+			self.options.set('show_command_bar', show_command_bar)
+			self.command_bar.set_visible(show_command_bar)
+
+		else:
+			menu_item.set_active(not self.options.get('show_command_bar'))
+		
+		return True
 
 	def _toggle_show_command_entry(self, widget, data=None):
 		"""Show/hide command entry"""
-		show_command_entry = widget.get_active()
+		menu_item = self.menu_manager.get_item_by_name('show_command_entry')
 
-		self.options.set('show_command_entry', show_command_entry)
-		self.command_entry_bar.set_visible(show_command_entry)
+		# NOTE: Calling set_active emits signal causing deadloop,
+		# to work around this issue we check if calling widget is menu item.
+		if widget is menu_item:
+			show_command_entry = menu_item.get_active()
+			self.options.set('show_command_entry', show_command_entry)
+			self.command_entry_bar.set_visible(show_command_entry)
+
+		else:
+			menu_item.set_active(not self.options.get('show_command_entry'))
+
+		return True
 
 	def _toggle_show_toolbar(self, widget, data=None):
 		"""Show/hide toolbar"""
-		show_toolbar = widget.get_active()
+		menu_item = self.menu_manager.get_item_by_name('show_toolbar')
 
-		self.options.set('show_toolbar', show_toolbar)
-		self.toolbar_manager.get_toolbar().set_visible(show_toolbar)
+		# NOTE: Calling set_active emits signal causing deadloop,
+		# to work around this issue we check if calling widget is menu item.
+		if widget is menu_item:
+			show_toolbar = menu_item.get_active()
+			self.options.set('show_toolbar', show_toolbar)
+			self.toolbar_manager.get_toolbar().set_visible(show_toolbar)
+
+		else:
+			menu_item.set_active(not self.options.get('show_toolbar'))
+
+		return True
 
 	def _toggle_media_preview(self, widget, data=None):
 		"""Enable/disable fast image preview"""
-		self.options.set('media_preview', widget.get_active())
+		menu_item = self.menu_manager.get_item_by_name('fast_media_preview')
+
+		if widget is menu_item:
+			self.options.set('media_preview', menu_item.get_active())
+
+		else:
+			menu_item.set_active(not self.options.get('media_preview'))
+			return True
 
 		# update left notebook
 		for index in range(0, self.left_notebook.get_n_pages()):
@@ -950,6 +1012,8 @@ class MainWindow(gtk.Window):
 
 			if hasattr(page, 'apply_media_preview_settings'):
 				page.apply_media_preview_settings()
+
+		return True
 
 	def _set_active_object(self, new_object):
 		"""Set active object"""
@@ -1045,125 +1109,188 @@ class MainWindow(gtk.Window):
 
 	def _command_reload(self, widget=None, data=None):
 		"""Handle command button click"""
+		result = False
 		active_object = self.get_active_object()
 
 		if hasattr(active_object, 'refresh_file_list'):
 			active_object.refresh_file_list()
+			result = True
+
+		return result
 
 	def _command_view(self, widget=None, data=None):
 		"""Handle command button click"""
+		result = False
 		active_object = self.get_active_object()
 
 		if hasattr(active_object, '_view_selected'):
 			active_object._view_selected()
+			result = True
+
+		return result
 
 	def _command_edit(self, widget=None, data=None):
 		"""Handle command button click"""
+		result = False
 		active_object = self.get_active_object()
 
 		if hasattr(active_object, '_edit_selected'):
 			active_object._edit_selected()
+			result = True
+
+		return result
 
 	def _command_copy(self, widget=None, data=None):
 		"""Handle command button click"""
+		result = False
 		active_object = self.get_active_object()
 
 		if hasattr(active_object, '_copy_files'):
 			active_object._copy_files()
+			result = True
+
+		return result
 
 	def _command_move(self, widget=None, data=None):
 		"""Handle command button click"""
+		result = False
 		active_object = self.get_active_object()
 
 		if hasattr(active_object, '_move_files'):
 			active_object._move_files()
+			result = True
+
+		return result
 
 	def _command_create(self, widget=None, data=None):
 		"""Handle command button click"""
+		result = False
 		active_object = self.get_active_object()
 
 		if data is None or (data is not None and data == 'directory'):
 			# create directory
 			if hasattr(active_object, '_create_directory'):
 				active_object._create_directory()
+				result = True
 
 		else:
 			# create file
 			if hasattr(active_object, '_create_file'):
 				active_object._create_file()
+				result = True
+
+		return result
 
 	def _command_delete(self, widget=None, data=None):
 		"""Handle command button click"""
+		result = False
 		active_object = self.get_active_object()
 
 		if hasattr(active_object, '_delete_files'):
 			active_object._delete_files()
+			result = True
+
+		return result
 
 	def _command_open(self, widget=None, data=None):
 		"""Execute selected item in active list"""
+		result = False
 		active_object = self.get_active_object()
 
 		if hasattr(active_object, '_execute_selected_item'):
 			active_object._execute_selected_item()
+			result = True
+
+		return result
 
 	def _command_open_in_new_tab(self, widget=None, data=None):
 		"""Open selected directory from active list in new tab"""
+		result = False
 		active_object = self.get_active_object()
 
 		if hasattr(active_object, '_open_in_new_tab'):
 			active_object._open_in_new_tab()
+			result = True
+		
+		return result
 
 	def _command_cut_to_clipboard(self, widget=None, data=None):
 		"""Copy selected items from active list to clipboard"""
+		result = False
 		active_object = self.get_active_object()
 
 		if hasattr(active_object, '_cut_files_to_clipboard'):
 			active_object._cut_files_to_clipboard()
+			result = True
+
+		return result
 
 	def _command_copy_to_clipboard(self, widget=None, data=None):
 		"""Copy selected items from active list to clipboard"""
+		result = False
 		active_object = self.get_active_object()
 
 		if hasattr(active_object, '_copy_files_to_clipboard'):
 			# ItemList object
 			active_object._copy_files_to_clipboard()
+			result = True
 
 		elif hasattr(active_object, '_copy_selection'):
 			# Terminal object
 			active_object._copy_selection()
+			result = True
+
+		return result
 
 	def _command_paste_from_clipboard(self, widget=None, data=None):
 		"""Copy selected items from active list to clipboard"""
+		result = False
 		active_object = self.get_active_object()
 
 		if hasattr(active_object, '_paste_files_from_clipboard'):
 			# ItemList object
 			active_object._paste_files_from_clipboard()
+			result = True
 
 		elif hasattr(active_object, '_paste_selection'):
 			# Terminal object
 			active_object._paste_selection()
+			result = True
+
+		return result
 
 	def _command_properties(self, widget=None, data=None):
 		"""Show properties for selected item in active list"""
+		result = False
 		active_object = self.get_active_object()
 
 		if hasattr(active_object, '_item_properties'):
 			active_object._item_properties()
+			result = True
+
+		return result
 
 	def _command_send_to(self, widget=None, data=None):
 		"""Show 'send to' dialog for selected items in active list"""
+		result = False
 		active_object = self.get_active_object()
 
 		if hasattr(active_object, '_send_to'):
 			active_object._send_to()
+			result = True
+
+		return result
 
 	def _command_rename(self, widget=None, data=None):
 		"""Rename selected item in active list"""
+		result = False
 		active_object = self.get_active_object()
 
 		if hasattr(active_object, '_rename_file'):
 			active_object._rename_file()
+			result = True
+
+		return result
 
 	def _command_edit_key_press(self, widget, event):
 		"""Handle key press in command edit"""
@@ -1171,7 +1298,7 @@ class MainWindow(gtk.Window):
 
 		if event.keyval in (gtk.keysyms.Up, gtk.keysyms.Escape)\
 		and event.state & gtk.accelerator_get_default_mod_mask() == 0:
-			self.get_active_object()._main_object.grab_focus()
+			self.get_active_object().focus_main_object()
 			result = True
 
 		return result
@@ -1179,6 +1306,11 @@ class MainWindow(gtk.Window):
 	def _command_edit_focused(self, widget, event):
 		"""Handle focusing command entry"""
 		self.accelerator_manager.deactivate_scheduled_groups(widget)
+		self._accel_group.deactivate()
+
+	def _command_edit_lost_focus(self, widget, event):
+		"""Handle command entry loosing focus"""
+		self._accel_group.activate(self)
 
 	def _save_window_position(self):
 		"""Save window position to config"""
@@ -1219,61 +1351,6 @@ class MainWindow(gtk.Window):
 
 		elif window_state == 2:
 			self.fullscreen()
-
-	def _version_specific_actions(self):
-		"""This method will provide user with some feedback and
-		backwards compatibility. Also it will show latest change log"""
-		config_version = self.options.get('last_version')
-		current_version = self.version['build']
-
-		# check if we need to show change log and optionally modify system
-		if current_version > config_version and config_version > 0:
-			mod_count = 0
-			vbox = gtk.VBox(False, 10)
-			vbox.set_border_width(5)
-
-			if config_version < 43:
-				vbox_version_43 = gtk.VBox(False, 0)
-
-				label_version_43 = gtk.Label('<b>Version 0.1a-43:</b>')
-				label_version_43.set_alignment(0, 0.5)
-				label_version_43.set_use_markup(True)
-
-				checkbox_reset_tabs = gtk.CheckButton('Remove old configuration files')
-				checkbox_reset_tabs.set_active(True)
-
-				vbox_version_43.pack_start(label_version_43, False, False, 0)
-				vbox_version_43.pack_start(checkbox_reset_tabs, False, False, 0)
-
-				vbox.pack_start(vbox_version_43, False, False, 0)
-				mod_count += 1
-
-			# show dialog
-			change_log = ChangeLogDialog(self, vbox, not mod_count == 0)
-			change_log.run()
-
-			## apply selected changes in reverse order
-			if config_version < 43:
-				file_list = (
-						'associations',
-						'tabs',
-						'bookmarks',
-						'toolbar',
-						'commands',
-						'accel_map',
-						'config',
-						'accelerators'
-					)
-
-				existing_files = filter(lambda file_name: os.path.exists(os.path.join(self.config_path, file_name)), file_list)
-				map(lambda file_name: os.unlink(os.path.join(self.config_path, file_name)), existing_files)
-
-			# kill dialog
-			change_log.destroy()
-
-		# set config version to current
-		if config_version is None or current_version > config_version:
-			self.options.set('last_version', current_version)
 
 	def _parse_arguments(self):
 		"""Parse command-line arguments passed to the application"""
@@ -1369,31 +1446,46 @@ class MainWindow(gtk.Window):
 			self.bookmarks.set_object(active_object)
 			self.bookmarks.show(self, button)
 
+		return True
+
 	def select_all(self, widget, data=None):
 		"""Select all items in active list"""
+		result = False
 		active_object = self.get_active_object()
 
 		# ensure we don't make exception on terminal tabs
 		if hasattr(active_object, 'select_all'):
 			active_object.select_all()
+			result = True
 
-	def unselect_all(self, widget, data=None):
-		"""Unselect all items in active list"""
+		return result
+
+	def deselect_all(self, widget, data=None):
+		"""Deselect all items in active list"""
+		result = False
 		active_object = self.get_active_object()
 
 		# ensure we don't make exception on terminal tabs
-		if hasattr(active_object, 'unselect_all'):
-			active_object.unselect_all()
+		if hasattr(active_object, 'deselect_all'):
+			active_object.deselect_all()
+			result = True
+
+		return result
 
 	def invert_selection(self, widget, data=None):
 		"""Invert selection in active list"""
+		result = False
 		active_object = self.get_active_object()
 
 		if hasattr(active_object, 'invert_selection'):
 			active_object.invert_selection()
+			result = True
+
+		return result
 
 	def select_with_pattern(self, widget, data=None):
 		"""Ask user for selection pattern and select matching items"""
+		result = False
 		active_object = self.get_active_object()
 
 		if hasattr(active_object, 'select_all'):
@@ -1411,8 +1503,13 @@ class MainWindow(gtk.Window):
 			if response[0] == gtk.RESPONSE_OK:
 				active_object.select_all(response[1])
 
+			result = True
+
+		return result
+
 	def select_with_same_extension(self, widget, data=None):
 		"""Select all items with same extension in active list"""
+		result = False
 		active_object = self.get_active_object()
 
 		if hasattr(active_object, '_get_selection') and hasattr(active_object, 'select_all'):
@@ -1422,8 +1519,13 @@ class MainWindow(gtk.Window):
 			and os.path.splitext(selection)[1] != '':
 				active_object.select_all('*{0}'.format(os.path.splitext(selection)[1]))
 
-	def unselect_with_same_extension(self, widget, data=None):
+			result = True
+
+		return result
+
+	def deselect_with_same_extension(self, widget, data=None):
 		"""Select all items with same extension in active list"""
+		result = False
 		active_object = self.get_active_object()
 
 		if hasattr(active_object, '_get_selection') and hasattr(active_object, 'select_all'):
@@ -1431,17 +1533,22 @@ class MainWindow(gtk.Window):
 
 			if selection is not None\
 			and os.path.splitext(selection)[1] != '':
-				active_object.unselect_all('*{0}'.format(os.path.splitext(selection)[1]))
+				active_object.deselect_all('*{0}'.format(os.path.splitext(selection)[1]))
 
-	def unselect_with_pattern(self, widget, data=None):
+			result = True
+
+		return result
+
+	def deselect_with_pattern(self, widget, data=None):
 		"""Ask user for selection pattern and select matching items"""
+		result = False
 		active_object = self.get_active_object()
 
-		if hasattr(active_object, 'unselect_all'):
+		if hasattr(active_object, 'deselect_all'):
 			# create dialog
 			dialog = InputDialog(self)
 
-			dialog.set_title(_('Unselect items'))
+			dialog.set_title(_('Deselect items'))
 			dialog.set_label(_('Selection pattern (eg.: *.jpg):'))
 			dialog.set_text('*')
 
@@ -1450,10 +1557,15 @@ class MainWindow(gtk.Window):
 
 			# commit selection
 			if response[0] == gtk.RESPONSE_OK:
-				active_object.unselect_all(response[1])
+				active_object.deselect_all(response[1])
+
+			result = True
+
+		return result
 
 	def compare_directories(self, widget=None, data=None):
 		"""Compare directories from left and right notebook"""
+		result = False
 		left_object = None
 		right_object = None
 
@@ -1487,6 +1599,10 @@ class MainWindow(gtk.Window):
 									)
 				dialog.run()
 				dialog.destroy()
+
+			result = True
+
+		return result
 
 	def run(self):
 		"""Start application"""
@@ -1552,7 +1668,7 @@ class MainWindow(gtk.Window):
 		# focus tab if needed
 		if self.options.get('focus_new_tab'):
 			notebook.set_current_page(index)
-			new_tab._main_object.grab_focus()
+			new_tab.focus_main_object()
 
 		return new_tab
 
@@ -1627,7 +1743,7 @@ class MainWindow(gtk.Window):
 			notebook.next_page()
 
 		page = notebook.get_nth_page(notebook.get_current_page())
-		page._main_object.grab_focus()
+		page.focus_main_object()
 
 	def previous_tab(self, notebook):
 		"""Select previous tab on given notebook"""
@@ -1640,7 +1756,7 @@ class MainWindow(gtk.Window):
 			notebook.prev_page()
 
 		page = notebook.get_nth_page(notebook.get_current_page())
-		page._main_object.grab_focus()
+		page.focus_main_object()
 
 	def set_active_tab(self, notebook, tab):
 		"""Set active tab number"""
@@ -1685,7 +1801,7 @@ class MainWindow(gtk.Window):
 			# if resulting path is a directory, change 
 			if active_object.get_provider().is_dir(path):
 				active_object.change_path(path)
-				active_object._main_object.grab_focus()
+				active_object.focus_main_object()
 
 			handled = True
 
@@ -1780,42 +1896,81 @@ class MainWindow(gtk.Window):
 
 		return result
 
-	def save_accel_map(self, path):
-		"""Save menu accelerator map"""
-		gtk.accel_map_save(path)
+	def configure_accelerators(self, menu):
+		"""Configure main accelerators group"""
+		group = AcceleratorGroup(self)
+		keyval = gtk.gdk.keyval_from_name
+		required_fields = set(('label', 'callback', 'path', 'name'))
 
-	def load_accel_map(self, path):
-		"""Load menu accelerator map"""
-		if os.path.isfile(path):
-			# load accelerator map
-			gtk.accel_map_load(path)
+		# configure accelerator group
+		group.set_name('main_menu')
+		group.set_title(_('Main Menu'))
 
-		else:
-			# no existing configuration, set default
-			accel_map = (
-					('<Sunflower>/File/CreateFile', 'F7', gtk.gdk.CONTROL_MASK),
-					('<Sunflower>/File/CreateDirectory', 'F7', 0),
-					('<Sunflower>/File/Quit', 'Q', gtk.gdk.CONTROL_MASK),
-					('<Sunflower>/Edit/Preferences', 'P', gtk.gdk.CONTROL_MASK | gtk.gdk.MOD1_MASK),
-					('<Sunflower>/Mark/SelectAll', 'A', gtk.gdk.CONTROL_MASK),
-					('<Sunflower>/Mark/SelectPattern', 'KP_Add', 0),
-					('<Sunflower>/Mark/UnselectPattern', 'KP_Subtract', 0),
-					('<Sunflower>/Mark/InvertSelection', 'KP_Multiply', 0),
-					('<Sunflower>/Mark/SelectWithSameExtension', 'KP_Add', gtk.gdk.MOD1_MASK),
-					('<Sunflower>/Mark/UnselectWithSameExtension', 'KP_Subtract', gtk.gdk.MOD1_MASK),
-					('<Sunflower>/Mark/Compare', 'F12', 0),
-					('<Sunflower>/Tools/FindFiles', 'F7', gtk.gdk.MOD1_MASK),
-					('<Sunflower>/Tools/SynchronizeDirectories', 'F8', gtk.gdk.MOD1_MASK),
-					('<Sunflower>/Tools/AdvancedRename', 'M', gtk.gdk.CONTROL_MASK),
-					('<Sunflower>/Tools/MountManager', 'O', gtk.gdk.CONTROL_MASK),
-					('<Sunflower>/View/Fullscreen', 'F11', 0),
-					('<Sunflower>/View/Reload', 'R', gtk.gdk.CONTROL_MASK),
-					('<Sunflower>/View/FastMediaPreview', 'F3', gtk.gdk.MOD1_MASK),
-					('<Sunflower>/View/ShowHidden', 'H', gtk.gdk.CONTROL_MASK),
-				)
+		# default accelerator map
+		default_accelerator = {
+				'<Sunflower>/File/CreateFile': (keyval('F7'), gtk.gdk.CONTROL_MASK),
+				'<Sunflower>/File/CreateDirectory': (keyval('F7'), 0),
+				'<Sunflower>/File/Quit': (keyval('Q'), gtk.gdk.CONTROL_MASK),
+				'<Sunflower>/Edit/Preferences': (keyval('P'), gtk.gdk.CONTROL_MASK | gtk.gdk.MOD1_MASK),
+				'<Sunflower>/Mark/SelectPattern': (keyval('KP_Add'), 0),
+				'<Sunflower>/Mark/DeselectPattern': (keyval('KP_Subtract'), 0),
+				'<Sunflower>/Mark/SelectWithSameExtension': (keyval('KP_Add'), gtk.gdk.MOD1_MASK),
+				'<Sunflower>/Mark/DeselectWithSameExtension': (keyval('KP_Subtract'), gtk.gdk.MOD1_MASK),
+				'<Sunflower>/Mark/Compare': (keyval('F12'), 0),
+				'<Sunflower>/Tools/FindFiles': (keyval('F7'), gtk.gdk.MOD1_MASK),
+				'<Sunflower>/Tools/SynchronizeDirectories': (keyval('F8'), gtk.gdk.MOD1_MASK),
+				'<Sunflower>/Tools/AdvancedRename': (keyval('M'), gtk.gdk.CONTROL_MASK),
+				'<Sunflower>/Tools/MountManager': (keyval('O'), gtk.gdk.CONTROL_MASK),
+				'<Sunflower>/View/Fullscreen': (keyval('F11'), 0),
+				'<Sunflower>/View/Reload': (keyval('R'), gtk.gdk.CONTROL_MASK),
+				'<Sunflower>/View/FastMediaPreview': (keyval('F3'), gtk.gdk.MOD1_MASK),
+				'<Sunflower>/View/ShowHidden': (keyval('H'), gtk.gdk.CONTROL_MASK),
+			}
 
-			for path, key, mask in accel_map:
-				gtk.accel_map_change_entry(path, gtk.gdk.keyval_from_name(key), mask, True)
+		alternative_accelerator = {
+				'<Sunflower>/Mark/SelectPattern': (keyval('equal'), 0),
+				'<Sunflower>/Mark/DeselectPattern': (keyval('minus'), 0),
+				'<Sunflower>/Mark/SelectWithSameExtension': (keyval('equal'), gtk.gdk.MOD1_MASK),
+				'<Sunflower>/Mark/DeselectWithSameExtension': (keyval('minus'), gtk.gdk.MOD1_MASK),
+			}
+
+		# filter out menu groups without submenu
+		menu = filter(lambda menu_group: 'submenu' in menu_group, menu)
+
+		# generate group based on main menu structure
+		for menu_group in menu:
+			group_name = menu_group['label'].replace('_', '')
+
+			for menu_item in menu_group['submenu']:
+				fields = set(menu_item.keys())
+
+				if required_fields.issubset(fields):
+					path = menu_item['path']
+					label = '{0} {1} {2}'.format(
+							group_name,
+							u'\u2192',
+							menu_item['label'].replace('_', '')
+						)
+					callback = menu_item['callback']
+					method_name = menu_item['name']
+					data = menu_item['data'] if 'data' in menu_item else None
+
+					# add method
+					group.add_method(method_name, label, callback, data)
+
+					# add default accelerator
+					if path in default_accelerator:
+						group.set_accelerator(method_name, *default_accelerator[path])
+
+					# add alternative accelerator
+					if path in alternative_accelerator:
+						group.set_alt_accelerator(method_name, *alternative_accelerator[path])
+
+					# set method path
+					group.set_path(method_name, path)
+		
+		# expose object
+		self._accel_group = group
 
 	def save_config(self):
 		"""Save configuration to file"""
@@ -1836,7 +1991,6 @@ class MainWindow(gtk.Window):
 
 			# save accelerators
 			self.accelerator_manager.save()
-			self.save_accel_map(os.path.join(self.config_path, 'accel_map'))
 
 		except IOError as error:
 			# notify user about failure
@@ -1846,10 +2000,10 @@ class MainWindow(gtk.Window):
 									gtk.MESSAGE_ERROR,
 									gtk.BUTTONS_OK,
 									_(
-										"Error saving configuration to files "
-										"in your home directory. Make sure you have "
-										"enough permissions."
-									) +	"\n\n{0}".format(error)
+										'Error saving configuration to files '
+										'in your home directory. Make sure you have '
+										'enough permissions.'
+									) +	'\n\n{0}'.format(error)
 								)
 			dialog.run()
 			dialog.destroy()
@@ -1902,8 +2056,10 @@ class MainWindow(gtk.Window):
 					'row_hinting': False,
 					'grid_lines': 0,
 					'selection_color': '#ffff5e5e0000',
+					'selection_indicator': u'\u2731',
 					'case_sensitive_sort': True,
 					'right_click_select': False,
+					'single_click_navigation': False,
 					'headers_visible': True,
 					'mode_format': 1
 				})
@@ -1971,9 +2127,9 @@ class MainWindow(gtk.Window):
 					'superuser_notification': True,
 					'tab_close_button': True,
 					'show_status_bar': 0,
-					'human_readable_size': True,
 					'media_preview': False,
-					'active_notebook': 0
+					'active_notebook': 0,
+					'size_format': common.SizeFormat.SI
 				})
 
 		# set default commands
@@ -1984,7 +2140,7 @@ class MainWindow(gtk.Window):
 	def focus_opposite_object(self, widget, data=None):
 		"""Sets focus on opposite item list"""
 		opposite_object = self.get_opposite_object(self.get_active_object())
-		opposite_object._main_object.grab_focus()
+		opposite_object.focus_main_object()
 
 		return True
 
@@ -1997,14 +2153,14 @@ class MainWindow(gtk.Window):
 		left_object = self.left_notebook.get_nth_page(self.left_notebook.get_current_page())
 
 		if left_object is not None:
-			left_object._main_object.grab_focus()
+			left_object.focus_main_object()
 
 	def focus_right_object(self, widget=None, data=None):
 		"""Focus object in the right notebook"""
 		right_object = self.right_notebook.get_nth_page(self.right_notebook.get_current_page())
 
 		if right_object is not None:
-			right_object._main_object.grab_focus()
+			right_object.focus_main_object()
 
 	def get_active_object(self):
 		"""Return active object"""
@@ -2212,13 +2368,13 @@ class MainWindow(gtk.Window):
 	def register_rename_extension(self, name, ExtensionClass):
 		"""Register class to be used in advanced rename tool"""
 		if issubclass(ExtensionClass, RenameExtension) \
-		and not self.rename_extension_classes.has_key(name):
+		and not name in self.rename_extension_classes:
 			# register class
 			self.rename_extension_classes[name] = ExtensionClass
 
 		else:
 			# report error to console
-			if self.rename_extension_classes.has_key(name):
+			if name in self.rename_extension_classes:
 				print 'Error: Extension with name "{0}" is already registered!'
 
 			if not issubclass(ExtensionClass, RenameExtension):
@@ -2227,13 +2383,13 @@ class MainWindow(gtk.Window):
 	def register_find_extension(self, name, ExtensionClass):
 		"""Register class to be used in find files tool"""
 		if issubclass(ExtensionClass, FindExtension) \
-		and not self.find_extension_classes.has_key(name):
+		and not name in self.find_extension_classes:
 			# register extension
 			self.find_extension_classes[name] = ExtensionClass
 
 		else:
 			# report error to console
-			if self.find_extension_classes.has_key(name):
+			if name in self.find_extension_classes:
 				print 'Error: Extension with name "{0}" is already registered!'
 
 			if not issubclass(ExtensionClass, FindExtension):
@@ -2353,6 +2509,8 @@ class MainWindow(gtk.Window):
 		window = AboutWindow(self)
 		window._show()
 
+		return True
+
 	def show_advanced_rename(self, widget, data=None):
 		"""Show advanced rename tool for active list"""
 		if len(self.rename_extension_classes) > 0 \
@@ -2396,6 +2554,8 @@ class MainWindow(gtk.Window):
 			# show preferences window
 			self.preferences_window._show(None, tab_name='plugins')
 
+		return True
+
 	def show_find_files(self, widget=None, data=None):
 		"""Show find files tool"""
 		if len(self.find_extension_classes) > 0:
@@ -2420,6 +2580,8 @@ class MainWindow(gtk.Window):
 			# show preferences window
 			self.preferences_window._show(None, tab_name='plugins')
 
+		return True
+
 	def show_keyring_manager(self, widget=None, data=None):
 		"""Show keyring manager if available"""
 		if self.keyring_manager.is_available():
@@ -2427,7 +2589,7 @@ class MainWindow(gtk.Window):
 			try:
 				KeyringManagerWindow(self)
 
-			except InvalidKeyringError as error:
+			except InvalidKeyringError:
 				# keyring is not available, let user know
 				dialog = gtk.MessageDialog(
 									self,
@@ -2454,10 +2616,14 @@ class MainWindow(gtk.Window):
 			dialog.run()
 			dialog.destroy()
 
+		return True
+
 	def check_for_new_version(self, widget=None, data=None):
 		"""Check for new versions"""
 		version = VersionCheck(self)
 		version.check()
+
+		return True
 
 	def add_control_to_status_bar(self, control):
 		"""Add new control to status bar"""

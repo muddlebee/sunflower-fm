@@ -50,23 +50,23 @@ class AssociationManager:
 
 		if selection is not None:
 			# prepare lists
-			normal_list = ["'{0}'".format(item) for item in selection]
-			uri_list = ["'{0}'".format(item) for item in selection]
-			dir_list = ["'{0}'".format(os.path.dirname(item) for item in selection)]
-			names_list = ["'{0}'".format(os.path.basename(item) for item in selection)]
+			normal_list = ['"{0}"'.format(item) for item in selection]
+			uri_list = ['"{0}"'.format(item) for item in selection]
+			dir_list = ['"{0}"'.format(os.path.dirname(item) for item in selection)]
+			names_list = ['"{0}"'.format(os.path.basename(item) for item in selection)]
 
 			# prepare single item selection
 			if '%f' in command:
-				exec_string = exec_string.replace('%f', "'{0}'".format(selection[0]))
+				exec_string = exec_string.replace('%f', '"{0}"'.format(selection[0]))
 
 			if '%u' in command:
-				exec_string = exec_string.replace('%u', "'{0}'".format(selection[0]))
+				exec_string = exec_string.replace('%u', '"{0}"'.format(selection[0]))
 
 			if '%d' in command:
-				exec_string = exec_string.replace('%d', "'{0}'".format(os.path.dirname(selection[0])))
+				exec_string = exec_string.replace('%d', '"{0}"'.format(os.path.dirname(selection[0])))
 
 			if '%n' in command:
-				exec_string = exec_string.replace('%n', "'{0}'".format(os.path.basename(selection[0])))
+				exec_string = exec_string.replace('%n', '"{0}"'.format(os.path.basename(selection[0])))
 
 			# prepare multiple selection
 			if '%F' in command:
@@ -174,6 +174,18 @@ class AssociationManager:
 					
 		return application
 
+	def set_default_application_for_type(self, mime_type, application_id):
+		"""Set default application for specified type"""
+		result = False
+
+		for app_info in gio.app_info_get_all():
+			if application_id == app_info.get_id():
+				app_info.set_as_default_for_type(mime_type)
+				result = True
+				break
+
+		return result
+
 	def open_file(self, selection, application_info=None, exec_command=None):
 		"""Open filename using config file or specified execute command"""
 		if application_info is not None:
@@ -188,10 +200,11 @@ class AssociationManager:
 			# raise exception, we need at least one argument
 			raise AttributeError('Error opening file. We need command or application to be specified.')
 		
+		selection = map(lambda item: item.replace('"', '\\"'), selection)
 		exec_string = self.__format_command_string(selection, command)
 
 		# open selected file(s)
-		split_command = shlex.split(exec_string)
+		split_command = shlex.split(exec_string, posix=False)
 		test_command = split_command[0] if len(split_command) > 1 else exec_string
 
 		if is_x_app(test_command):
@@ -229,7 +242,7 @@ class AssociationManager:
 			options.set('arguments', split_command)
 			options.set('path', os.path.dirname(selection[0]))
 
-			tab = self._application.create_terminal_tab(active_object._notebook, options)
+			self._application.create_terminal_tab(active_object._notebook, options)
 
 		else:
 			os.system('{0} &'.format(exec_string))
@@ -268,7 +281,7 @@ class AssociationManager:
 					options.set('shell_command', path)
 					options.set('path', os.path.dirname(path))
 
-					tab = self._application.create_terminal_tab(active_object._notebook, options)
+					self._application.create_terminal_tab(active_object._notebook, options)
 
 		else:
 			# file type is not executable, try to open with default associated application

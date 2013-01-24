@@ -1,6 +1,5 @@
 import os
 import gtk
-import locale
 import urllib
 import common
 
@@ -47,8 +46,9 @@ class ItemList(PluginBase):
 		self._size = {'total': 0L, 'selected': 0L}
 
 		# local human readable cache
-		self._human_readable = self._parent.options.get('human_readable_size')
+		self._size_format = self._parent.options.get('size_format')
 		self._selection_color = self._parent.options.section('item_list').get('selection_color')
+		self._selection_indicator = self._parent.options.section('item_list').get('selection_indicator')
 
 		# we use this variable to prevent dead loop during column resize
 		self._is_updating = False
@@ -73,11 +73,6 @@ class ItemList(PluginBase):
 
 		self._bookmarks_button.set_focus_on_click(False)
 		self._bookmarks_button.set_tooltip_text(_('Bookmarks'))
-		self._bookmarks_button.set_relief((
-									gtk.RELIEF_NONE,
-									gtk.RELIEF_NORMAL
-									)[self._parent.options.get('button_relief')])
-
 		self._bookmarks_button.connect('clicked', self._bookmarks_button_clicked)
 
 		self._title_bar.add_control(self._bookmarks_button)
@@ -96,11 +91,6 @@ class ItemList(PluginBase):
 
 		self._history_button.set_focus_on_click(False)
 		self._history_button.set_tooltip_text(_('History'))
-		self._history_button.set_relief((
-									gtk.RELIEF_NONE,
-									gtk.RELIEF_NORMAL
-									)[self._parent.options.get('button_relief')])
-
 		self._history_button.connect('clicked', self._history_button_clicked)
 
 		self._title_bar.add_control(self._history_button)
@@ -119,11 +109,6 @@ class ItemList(PluginBase):
 
 		self._terminal_button.set_focus_on_click(False)
 		self._terminal_button.set_tooltip_text(_('Terminal'))
-		self._terminal_button.set_relief((
-									gtk.RELIEF_NONE,
-									gtk.RELIEF_NORMAL
-		                        )[self._parent.options.get('button_relief')])
-
 		self._terminal_button.connect('clicked', self._create_terminal)
 
 		self._title_bar.add_control(self._terminal_button)
@@ -247,10 +232,15 @@ class ItemList(PluginBase):
 		group.add_method('open_directory', _('Open selected directory'), self._open_directory)
 		group.add_method('create_terminal', _('Create terminal tab'), self._create_terminal)
 		group.add_method('parent_directory', _('Go to parent directory'), self._parent_directory)
+		group.add_method('root_directory', _('Go to root directory'), self._root_directory)
 		group.add_method('show_history', _('Show history browser'), self._show_history_window)
+		group.add_method('select_all', _('Select all'), self._select_all)
+		group.add_method('deselect_all', _('Deselect all'), self._deselect_all)
+		group.add_method('invert_selection', _('Invert selection'), self._invert_selection)
 		group.add_method('toggle_selection', _('Toggle selection'), self._toggle_selection)
 		group.add_method('toggle_selection_up', _('Toggle selection and move marker up'), self._toggle_selection_up)
-		group.add_method('delete_files', _('Delete selected items'), self._delete_files)
+		group.add_method('delete_files', _('Trash or delete selected items'), self._delete_files, False)
+		group.add_method('force_delete_files', _('Force deleting selected items'), self._delete_files, True)
 		group.add_method('show_left_bookmarks', _('Show bookmarks for left list'), self._show_left_bookmarks)
 		group.add_method('show_right_bookmarks', _('Show bookmarks for right list'), self._show_right_bookmarks)
 		group.add_method('rename_file', _('Rename selected item'), self._rename_file)
@@ -281,11 +271,17 @@ class ItemList(PluginBase):
 		group.set_accelerator('open_in_new_tab', keyval('t'), gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK)
 		group.set_accelerator('create_terminal', keyval('z'), gtk.gdk.CONTROL_MASK)
 		group.set_accelerator('parent_directory', keyval('BackSpace'), 0)
+		group.set_accelerator('root_directory', keyval('backslash'), gtk.gdk.CONTROL_MASK)
 		group.set_accelerator('show_history', keyval('BackSpace'), gtk.gdk.CONTROL_MASK)
+		group.set_accelerator('select_all', keyval('A'), gtk.gdk.CONTROL_MASK)
+		group.set_accelerator('deselect_all', keyval('A'), gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK)
+		group.set_accelerator('invert_selection', keyval('asterisk'), gtk.gdk.SHIFT_MASK)
+		group.set_alt_accelerator('invert_selection', keyval('KP_Multiply'), 0)
 		group.set_accelerator('toggle_selection', keyval('Insert'), 0)
 		group.set_alt_accelerator('toggle_selection', keyval('Down'), gtk.gdk.SHIFT_MASK)
 		group.set_accelerator('toggle_selection_up', keyval('Up'), gtk.gdk.SHIFT_MASK)
 		group.set_accelerator('delete_files', keyval('Delete'), 0)
+		group.set_accelerator('force_delete_files', keyval('Delete'), gtk.gdk.SHIFT_MASK)
 		group.set_alt_accelerator('delete_files', keyval('F8'), 0)
 		group.set_accelerator('show_left_bookmarks', keyval('F1'), gtk.gdk.CONTROL_MASK)
 		group.set_accelerator('show_right_bookmarks', keyval('F2'), gtk.gdk.CONTROL_MASK)
@@ -440,12 +436,15 @@ class ItemList(PluginBase):
 	def _handle_button_press(self, widget, event):
 		"""Handles mouse events"""
 		result = False
+
 		right_click_select = self._parent.options.section('item_list').get('right_click_select')
+		single_click_navigation = self._parent.options.section('item_list').get('single_click_navigation')
+
+		shift_active = event.state & gtk.gdk.SHIFT_MASK
+		control_active = event.state & gtk.gdk.CONTROL_MASK
 
 		# handle single click
-		if event.button is 1 \
-		and event.state & gtk.gdk.CONTROL_MASK \
-		and event.type in (gtk.gdk.BUTTON_PRESS, gtk.gdk.BUTTON_RELEASE):
+		if event.button is 1 and control_active and event.type in (gtk.gdk.BUTTON_PRESS, gtk.gdk.BUTTON_RELEASE):
 			# we handle left mouse press and release in order to prevent
 			# default widget behavior which leads to unpredictable results
 
@@ -465,9 +464,7 @@ class ItemList(PluginBase):
 			result = True
 
 		# handle range select
-		elif event.button is 1 \
-		and event.state & gtk.gdk.SHIFT_MASK \
-		and event.type is gtk.gdk.BUTTON_PRESS:
+		elif event.button is 1 and shift_active and event.type is gtk.gdk.BUTTON_PRESS:
 			start_path = None
 			end_path = None
 
@@ -494,10 +491,15 @@ class ItemList(PluginBase):
 
 			result = True
 
-		# handle double click
-		elif event.button is 1 and event.type is gtk.gdk._2BUTTON_PRESS:
-			self._execute_selected_item(widget)
-			result = True
+		# handle navigation with double or single click
+		elif event.button is 1 and not (shift_active or control_active) \
+		and ((event.type is gtk.gdk._2BUTTON_PRESS and not single_click_navigation) \
+		or (event.type is gtk.gdk.BUTTON_RELEASE and single_click_navigation)):
+
+			# make sure that clicking on empty space doesn't trigger any action
+			if self._item_list.get_path_at_pos(int(event.x), int(event.y)) is not None:
+				self._execute_selected_item(widget)
+				result = True
 
 		# handle middle click
 		elif event.button is 2 and event.type is gtk.gdk.BUTTON_RELEASE:
@@ -511,7 +513,7 @@ class ItemList(PluginBase):
 				self._popup_timestamp = event.get_time()
 
 				# prevent CTRL+RightClick from generating exceptions
-				if event.state & gtk.gdk.CONTROL_MASK:
+				if control_active:
 					result = True
 
 			elif event.type is gtk.gdk.BUTTON_RELEASE:
@@ -1130,6 +1132,15 @@ class ItemList(PluginBase):
 
 		return True  # to prevent command or quick search in single key bindings
 
+	def _root_directory(self, widget=None, data=None):
+		"""Navigate to root directory"""
+		self.change_path(
+						os.path.sep,
+						os.path.basename(self.path)
+					)
+
+		return True
+
 	def _focus_command_line(self, key):
 		"""Focus command-line control"""
 		if self._parent.options.get('show_command_entry'):
@@ -1230,13 +1241,8 @@ class ItemList(PluginBase):
 	def _update_status_with_statistis(self):
 		"""Set status bar text according to dir/file stats"""
 		# format size
-		if self._human_readable:
-			total_text = common.format_size(self._size['total'])
-			selected_text = common.format_size(self._size['selected'])
-
-		else:
-			total_text = locale.format('%d', self._size['total'], True)
-			selected_text = locale.format('%d', self._size['selected'], True)
+		total_text = common.format_size(self._size['total'], self._size_format)
+		selected_text = common.format_size(self._size['selected'], self._size_format)
 
 		self._status_bar.set_text(
 							'{0}/{1}'.format(
@@ -1383,8 +1389,8 @@ class ItemList(PluginBase):
 			selected_items = self._dirs['selected'] + self._files['selected']
 			(self._hide_status_bar, self._show_status_bar)[selected_items > 0]()
 
-	def unselect_all(self, pattern=None):
-		"""Unselect items matching the pattern"""
+	def deselect_all(self, pattern=None):
+		"""Deselect items matching the pattern"""
 		if self._parent.options.get('show_status_bar') == StatusVisible.WHEN_NEEDED:
 			selected_items = self._dirs['selected'] + self._files['selected']
 			(self._hide_status_bar, self._show_status_bar)[selected_items > 0]()
@@ -1455,25 +1461,12 @@ class ItemList(PluginBase):
 		# change change sorting sensitivity
 		self._sort_sensitive = self._parent.options.section('item_list').get('case_sensitive_sort')
 
-		# change button relief
-		self._bookmarks_button.set_relief((
-									gtk.RELIEF_NONE,
-									gtk.RELIEF_NORMAL
-									)[self._parent.options.get('button_relief')])
-		self._history_button.set_relief((
-									gtk.RELIEF_NONE,
-									gtk.RELIEF_NORMAL
-									)[self._parent.options.get('button_relief')])
-		self._terminal_button.set_relief((
-									gtk.RELIEF_NONE,
-									gtk.RELIEF_NORMAL
-									)[self._parent.options.get('button_relief')])
-
 		# apply size formatting
-		self._human_readable = self._parent.options.get('human_readable_size')
+		self._size_format = self._parent.options.get('size_format')
 
-		# apply selection color
+		# apply selection
 		self._selection_color = self._parent.options.section('item_list').get('selection_color')
+		self._selection_indicator = self._parent.options.section('item_list').get('selection_indicator')
 
 		# change status bar visibility
 		show_status_bar = self._parent.options.get('show_status_bar')

@@ -1,8 +1,8 @@
 import gtk
 import pango
-import locale
 import gobject
 import common
+
 
 class OperationDialog:
 	"""Dialog for operations
@@ -27,7 +27,8 @@ class OperationDialog:
 		self._has_source_destination = False
 		self._has_current_file = False
 		self._has_details = False
-		self._human_readable = self._application.options.get('human_readable_size')
+		self._size_format_type = self._application.options.get('size_format')
+		self._hide_on_minimize = application.options.section('operations').get('hide_on_minimize')
 
 		self._total_size = 0L
 		self._total_count = 0L
@@ -37,8 +38,6 @@ class OperationDialog:
 		# aggregate speeds to provide accurate time prediction
 		self._speeds = []
 		self._total_checkpoint = 0
-
-		self._hide_on_minimize = application.options.section('operations').get('hide_on_minimize')
 
 		# set window properties
 		self._window.set_title('Operation Dialog')
@@ -296,18 +295,11 @@ class OperationDialog:
 
 	def _update_total_size(self):
 		"""Update progress bar and labels for total size"""
-		if self._human_readable:
-			formated_size = self._size_format.format(
-												common.format_size(self._current_size),
-												common.format_size(self._total_size)
-											)
-		else:
-			formated_size = self._size_format.format(
-												locale.format('%d', self._current_size, True),
-												locale.format('%d', self._total_size, True)
-											)
-
-		# update lable
+		# update label
+		formated_size = self._size_format.format(
+											common.format_size(self._current_size, self._size_format_type),
+											common.format_size(self._total_size, self._size_format_type)
+										)
 		self._value_total_size.set_label(formated_size)
 
 		if self._total_size > 0:
@@ -368,15 +360,7 @@ class OperationDialog:
 			# we don't have average speed yet
 			time_text = _('unknown')
 
-		if self._human_readable:
-			average_text = common.format_size(average)
-
-		else:
-			average_text = '{0} {1}'.format(
-								locale.format('%d', average, True),
-								ngettext('byte', 'bytes', average)
-							)
-
+		average_text = common.format_size(average, self._size_format_type)
 		speed_text = '{0}/s'.format(average_text)
 
 		self._value_eta.set_text(time_text)

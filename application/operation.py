@@ -79,8 +79,9 @@ class Operation(Thread):
 
 	def _get_free_space_input(self, needed, available):
 		"""Get user input when there is not enough space"""
-		space_needed = format_size(needed)
-		space_available = format_size(available)
+		size_format = self._application.options.get('size_format')
+		space_needed = format_size(needed, size_format)
+		space_available = format_size(available, size_format)
 
 		if self._options[Option.SILENT]:
 			# silent option is enabled, we skip operation by default
@@ -858,7 +859,7 @@ class CopyOperation(Operation):
 		with gtk.gdk.lock:
 			parent = self._source.get_parent()
 			if self._source_path == parent.path:
-				parent.unselect_all()
+				parent.deselect_all()
 
 		# perform operation
 		self._create_directory_list()
@@ -1076,7 +1077,7 @@ class MoveOperation(CopyOperation):
 		with gtk.gdk.lock:
 			parent = self._source.get_parent()
 			if self._source_path == parent.path:
-				parent.unselect_all()
+				parent.deselect_all()
 
 		# create directories
 		self._create_directory_list()
@@ -1129,6 +1130,9 @@ class DeleteOperation(Operation):
 
 	def __init__(self, application, provider):
 		Operation.__init__(self, application, provider)
+
+		# allow users to force deleting items
+		self._force_delete = False
 		
 	def _create_dialog(self):
 		"""Create operation dialog"""
@@ -1170,6 +1174,10 @@ class DeleteOperation(Operation):
 				# user didn't want to retry, remove path from list
 				self._file_list.pop(self._file_list.index(path))
 
+	def set_force_delete(self, force):
+		"""Set forced deletion instead of trashing files"""
+		self._force_delete = force
+
 	def run(self):
 		"""Main thread method, this is where all the stuff is happening"""
 		self._file_list = self._selection_list[:]  # use predefined selection list
@@ -1178,16 +1186,20 @@ class DeleteOperation(Operation):
 			# clear selection on source directory
 			parent = self._source.get_parent()
 			if self._source_path == parent.path:
-				parent.unselect_all()
+				parent.deselect_all()
 
 		# select removal method
 		trash_files = self._application.options.section('operations').get('trash_files') 
 		trash_available = ProviderSupport.TRASH in self._source.get_support()
 
-		remove_method = (
-				self._remove_path, 
-				self._trash_path
-			)[trash_files and trash_available]
+		if self._force_delete:
+			remove_method = self._remove_path
+
+		else:
+			remove_method = (
+					self._remove_path, 
+					self._trash_path
+				)[trash_files and trash_available]
 
 		# remove them
 		for index, item in enumerate(self._file_list, 1):
