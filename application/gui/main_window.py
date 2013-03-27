@@ -854,8 +854,8 @@ class MainWindow(gtk.Window):
 		command = widget.get_data('command')
 
 		# grab active objects
-		left_object = self.left_notebook.get_nth_page(self.left_notebook.get_current_page())
-		right_object = self.right_notebook.get_nth_page(self.right_notebook.get_current_page())
+		left_object = self.get_left_object()
+		right_object = self.get_right_object()
 
 		if hasattr(left_object, '_get_selection'):
 			# get selected item from the left list
@@ -1630,21 +1630,11 @@ class MainWindow(gtk.Window):
 	def compare_directories(self, widget=None, data=None):
 		"""Compare directories from left and right notebook"""
 		result = False
-		left_object = None
-		right_object = None
-
-		# get left object
-		if self.left_notebook.get_n_pages() > 0:
-			left_object = self.left_notebook.get_nth_page(self.left_notebook.get_current_page())
-
-		# get right object
-		if self.right_notebook.get_n_pages() > 0:
-			right_object = self.right_notebook.get_nth_page(self.right_notebook.get_current_page())
+		left_object = self.get_left_object()
+		right_object = self.get_right_object()
 
 		# if both objects have selection methods and exist
-		if None not in (left_object, right_object) \
-		and hasattr(left_object, 'select_all') \
-		and hasattr(right_object, 'select_all'):
+		if hasattr(left_object, 'select_all') and hasattr(right_object, 'select_all'):
 			# get file lists
 			left_list = left_object.get_provider().list_dir(left_object.path)
 			right_list = right_object.get_provider().list_dir(right_object.path)
@@ -1670,51 +1660,57 @@ class MainWindow(gtk.Window):
 
 	def run(self):
 		"""Start application"""
+		left_list = []
+		right_list = []
+
 		DefaultList = self.plugin_classes['file_list']
 		DefaultTerminal = self.plugin_classes['system_terminal']
 
-		if self.arguments is not None and self.arguments.dont_load_tabs:
-			# if specified tab list is empty, create default
-			if self.arguments.left_tabs is None:
-				self.create_tab(self.left_notebook, DefaultList)
+		section = self.options.section('item_list')
+		config_prevents_load = section.get('force_directories')
+		arguments_prevents_load = self.arguments is not None and self.arguments.dont_load_tabs
 
-			if self.arguments.right_tabs is None:
-				self.create_tab(self.right_notebook, DefaultList)
+		# load saved tabs if needed
+		if not (config_prevents_load or arguments_prevents_load):
+			self.load_tabs(self.left_notebook, 'left')
+			self.load_tabs(self.right_notebook, 'right')
 
-		else:
-			# load tabs in the left notebook
-			if not self.load_tabs(self.left_notebook, 'left'):
-				self.create_tab(self.left_notebook, DefaultList)
-
-			# load tabs in the right notebook
-			if not self.load_tabs(self.right_notebook, 'right'):
-				self.create_tab(self.right_notebook, DefaultList)
-
-		# create additional tabs
+		# populate lists with command line arguments
 		if self.arguments is not None:
 			if self.arguments.left_tabs is not None:
-				for path in self.arguments.left_tabs:
-					options = Parameters()
-					options.set('path', path)
-					self.create_tab(self.left_notebook, DefaultList, options)
+				left_list.extend(map(lambda path: (DefaultList, path), self.arguments.left_tabs))
 
 			if self.arguments.right_tabs is not None:
-				for path in self.arguments.right_tabs:
-					options = Parameters()
-					options.set('path', path)
-					self.create_tab(self.right_notebook, DefaultList, options)
+				right_list.extend(map(lambda path: (DefaultList, path), self.arguments.right_tabs))
 
 			if self.arguments.left_terminals is not None:
-				for path in self.arguments.left_terminals:
-					options = Parameters()
-					options.set('path', path)
-					self.create_tab(self.left_notebook, DefaultTerminal, options)
+				left_list.extend(map(lambda path: (DefaultTerminal, path), self.arguments.left_terminals))
 
 			if self.arguments.right_terminals is not None:
-				for path in self.arguments.right_terminals:
-					options = Parameters()
-					options.set('path', path)
-					self.create_tab(self.right_notebook, DefaultTerminal, options)
+				right_list.extend(map(lambda path: (DefaultTerminal, path), self.arguments.right_terminals))
+
+		# populate list with specified config directories
+		if config_prevents_load:
+			left_list.extend(map(lambda path: (DefaultList, path), section.get('left_directories')))
+			right_list.extend(map(lambda path: (DefaultList, path), section.get('right_directories')))
+
+		# finally create additional tabs
+		for Class, path in left_list:
+			options = Parameters()
+			options.set('path', path)
+			self.create_tab(self.left_notebook, Class, options)
+
+		for Class, path in right_list:
+			options = Parameters()
+			options.set('path', path)
+			self.create_tab(self.right_notebook, Class, options)
+
+		# make sure we have at least one tab loaded on each notebook
+		if self.left_notebook.get_n_pages() == 0:
+			self.create_tab(self.left_notebook, DefaultList)
+
+		if self.right_notebook.get_n_pages() == 0:
+			self.create_tab(self.right_notebook, DefaultList)
 
 		# focus active notebook
 		active_notebook_index = self.options.get('active_notebook')
@@ -2164,7 +2160,10 @@ class MainWindow(gtk.Window):
 					'right_click_select': False,
 					'single_click_navigation': False,
 					'headers_visible': True,
-					'mode_format': 1
+					'mode_format': 1,
+					'left_directories': [],
+					'right_directories': [],
+					'force_directories': False
 				})
 
 		# create default operation options
@@ -2278,17 +2277,13 @@ class MainWindow(gtk.Window):
 
 	def focus_left_object(self, widget=None, data=None):
 		"""Focus object in the left notebook"""
-		left_object = self.left_notebook.get_nth_page(self.left_notebook.get_current_page())
-
-		if left_object is not None:
-			left_object.focus_main_object()
+		left_object = self.get_left_object()
+		left_object.focus_main_object()
 
 	def focus_right_object(self, widget=None, data=None):
 		"""Focus object in the right notebook"""
-		right_object = self.right_notebook.get_nth_page(self.right_notebook.get_current_page())
-
-		if right_object is not None:
-			right_object.focus_main_object()
+		right_object = self.get_right_object()
+		right_object.focus_main_object()
 
 	def get_active_object(self):
 		"""Return active object"""
@@ -2296,16 +2291,20 @@ class MainWindow(gtk.Window):
 
 	def get_opposite_object(self, active_object):
 		"""Return opposite object"""
-		left_object = self.left_notebook.get_nth_page(self.left_notebook.get_current_page())
-		right_object = self.right_notebook.get_nth_page(self.right_notebook.get_current_page())
+		left_object = self.get_left_object()
+		right_object = self.get_right_object()
 
-		if active_object is left_object:
-			result = right_object
-
-		else:
-			result = left_object
+		result = right_object if active_object is left_object else left_object
 
 		return result
+
+	def get_left_object(self):
+		"""Return active tab from left notebook"""
+		return self.left_notebook.get_nth_page(self.left_notebook.get_current_page())
+
+	def get_right_object(self):
+		"""Return active tab from right notebook"""
+		return self.right_notebook.get_nth_page(self.right_notebook.get_current_page())
 
 	def delegate_to_objects(self, caller, method_name, *args):
 		"""Call specified method_name on all active objects of same class as caller
