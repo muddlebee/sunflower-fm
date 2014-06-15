@@ -94,7 +94,7 @@ class PluginBase(gtk.VBox):
 									)
 
 			self._main_object.drag_source_set(
-										gtk.gdk.BUTTON1_MASK,
+										gtk.gdk.BUTTON1_MASK | gtk.gdk.BUTTON3_MASK,
 										types,
 										actions
 									)
