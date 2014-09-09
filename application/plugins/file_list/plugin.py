@@ -258,12 +258,9 @@ class FileList(ItemList):
 				self._columns.append(column)
 				self._item_list.append_column(column)
 
-		# resize columns to saved values
+		# restore column properties
 		self._resize_columns(self._columns)
-
 		self._set_font_size(self._columns)
-
-		# set column order
 		self._reorder_columns()
 
 		# release signal block
@@ -275,11 +272,13 @@ class FileList(ItemList):
 		self._item_list.set_search_column(Column.NAME)
 
 		# set row hinting
-		row_hinting = self._parent.options.section('item_list').get('row_hinting')
+		section = self._parent.options.section('item_list')
+		row_hinting = section.get('row_hinting')
 		self._item_list.set_rules_hint(row_hinting)
 
 		# set visibility of tree expanders
-		self._item_list.set_show_expanders(self._parent.options.section('item_list').get('show_expanders'))
+		self._show_expanders = section.get('show_expanders')
+		self._item_list.set_show_expanders(self._show_expanders)
 
 		# set grid lines
 		grid_lines = (
@@ -561,7 +560,8 @@ class FileList(ItemList):
 			return True
 
 		# show expanders if they are hidden
-		if not self._item_list.get_show_expanders():
+		if not self._show_expanders:
+			self._show_expanders = True
 			self._item_list.set_show_expanders(True)
 
 		# remove children if directory is already expanded
@@ -803,7 +803,7 @@ class FileList(ItemList):
 						 	"You are about to delete {0} items.\n"
 						 	"Are you sure about this?",
 						 	len(selection)
-						 ) 
+						 )
 
 			else:
 				message = ngettext(
@@ -812,7 +812,7 @@ class FileList(ItemList):
 						 	"You are about to move {0} items to trash.\n"
 						 	"Are you sure about this?",
 						 	len(selection)
-						 ) 
+						 )
 
 			# user has confirmation dialog enabled
 			dialog = gtk.MessageDialog(
@@ -870,7 +870,7 @@ class FileList(ItemList):
 		if hasattr(opposite_object, 'get_provider'):
 			destination_provider = opposite_object.get_provider()
 			destination_monitor = opposite_object.get_monitor()
-		
+
 		# ask confirmation from user
 		dialog = CopyDialog(
 						self._parent,
@@ -1611,6 +1611,10 @@ class FileList(ItemList):
 			for data in self._item_queue:
 				new_iter = self._store.append(parent, data)
 
+				# force showing expanders
+				if self._show_expanders and data[Column.IS_DIR] and not data[Column.IS_PARENT_DIR]:
+					self._store.append(new_iter, tuple(range(18)))
+
 				# focus specified item
 				if self._item_to_focus == data[0]:
 					path = self._store.get_path(new_iter)
@@ -1740,10 +1744,10 @@ class FileList(ItemList):
 		# set title and subtitle
 		self._title_bar.set_title(text)
 		self._title_bar.set_subtitle('{3} {0} - {4} {1} - {2:.2f}%'.format(
-							size_available, 
-							size_total, 
+							size_available,
+							size_total,
 							percent_available,
-							_('Free:'), 
+							_('Free:'),
 							_('Total:')
 						))
 
@@ -2056,7 +2060,7 @@ class FileList(ItemList):
 
 		# get provider for specified URI
 		provider = None
-		self.path = path 
+		self.path = path
 
 		if '://' not in path:
 			scheme = 'file'
@@ -2064,7 +2068,7 @@ class FileList(ItemList):
 		else:
 			data = path.split('://', 1)
 			scheme = data[0]
-			
+
 			# for local storage, use path without scheme
 			if scheme == 'file':
 				self.path = data[1]
@@ -2339,7 +2343,8 @@ class FileList(ItemList):
 		self._item_list.set_rules_hint(row_hinting)
 
 		# apply expander visibility
-		self._item_list.set_show_expanders(section.get('show_expanders'))
+		self._show_expanders = section.get('show_expanders')
+		self._item_list.set_show_expanders(self._show_expanders)
 
 		# apply grid lines
 		grid_lines = (
