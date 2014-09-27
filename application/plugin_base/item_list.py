@@ -120,7 +120,7 @@ class ItemList(PluginBase):
 		self._open_with_menu = None
 		self._popup_menu = self._create_popup_menu()
 
-		# tab menu 
+		# tab menu
 		self._tab_menu = gtk.Menu()
 		self._title_bar.set_menu(self._tab_menu)
 
@@ -294,7 +294,9 @@ class ItemList(PluginBase):
 
 		# configure accelerators
 		group.set_accelerator('execute_item', keyval('Return'), 0)
+		group.set_alt_accelerator('execute_item', keyval('KP_Enter'), 0)
 		group.set_accelerator('item_properties', keyval('Return'), gtk.gdk.MOD1_MASK)
+		group.set_alt_accelerator('item_properties', keyval('KP_Enter'), gtk.gdk.MOD1_MASK)
 		group.set_accelerator('add_bookmark', keyval('d'), gtk.gdk.CONTROL_MASK)
 		group.set_accelerator('edit_bookmarks', keyval('b'), gtk.gdk.CONTROL_MASK)
 		group.set_accelerator('cut_to_clipboard', keyval('x'), gtk.gdk.CONTROL_MASK)
@@ -336,7 +338,9 @@ class ItemList(PluginBase):
 		group.set_accelerator('copy_path_to_clipboard', keyval('l'), gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK)
 		group.set_accelerator('copy_selected_path_to_clipboard', keyval('c'), gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK)
 		group.set_accelerator('copy_path_to_command_entry', keyval('Return'), gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK)
+		group.set_alt_accelerator('copy_path_to_command_entry', keyval('KP_Enter'), gtk.gdk.CONTROL_MASK | gtk.gdk.SHIFT_MASK)
 		group.set_accelerator('copy_selection_to_command_entry', keyval('Return'), gtk.gdk.CONTROL_MASK)
+		group.set_alt_accelerator('copy_selection_to_command_entry', keyval('KP_Enter'), gtk.gdk.CONTROL_MASK)
 		group.set_accelerator('custom_path_entry', keyval('l'), gtk.gdk.CONTROL_MASK)
 		group.set_accelerator('start_quick_search', keyval('f'), gtk.gdk.CONTROL_MASK)
 		group.set_accelerator('expand_directory', keyval('Right'), 0)
@@ -943,7 +947,7 @@ class ItemList(PluginBase):
 
 	def _get_popup_menu_position(self, menu, data=None):
 		"""Abstract method for positioning menu properly on given row"""
-		return (0, 0, True)
+		return 0, 0, True
 
 	def _get_history_menu_position(self, menu, button):
 		"""Get history menu position"""
@@ -956,7 +960,7 @@ class ItemList(PluginBase):
 		pos_x = window_x + button_x
 		pos_y = window_y + button_y + button_h
 
-		return (pos_x, pos_y, True)
+		return pos_x, pos_y, True
 
 	def _get_other_provider(self):
 		"""Return provider from opposite list.
@@ -1405,7 +1409,7 @@ class ItemList(PluginBase):
 		"""Toggle selection and move cursor up"""
 		self._toggle_selection(widget, data, advance=False)
 		self._move_marker_up(widget, data)
-	
+
 		return True
 
 	def _toggle_selection_from_cursor_up(self, widget, data=None):
@@ -1471,7 +1475,7 @@ class ItemList(PluginBase):
 		"""Swap left and right paths"""
 		opposite_object = self._parent.get_opposite_object(self)
 
-		if (hasattr(opposite_object, 'change_path')):
+		if hasattr(opposite_object, 'change_path'):
 			# get path from opposite object
 			new_path = opposite_object.path
 
@@ -1491,7 +1495,7 @@ class ItemList(PluginBase):
 		self._parent.preferences_window._show(widget, 'bookmarks')
 		return True
 
-	def _directory_changed(monitor, event, path, other_path, parent=None):
+	def _directory_changed(self, event, path, other_path, parent=None):
 		"""Handle signal emitted by monitor"""
 		pass
 
@@ -1548,7 +1552,7 @@ class ItemList(PluginBase):
 	def copy_path_to_command_entry(self, widget=None, data=None):
 		"""Copy current path to command entry and focus it"""
 		self._parent.set_command_entry_text(self.path, True)
-		
+
 	def copy_selection_to_command_entry(self, widget=None, data=None):
 		"""Copy current selection to command entry and focus it"""
 		selection = self._get_selection(relative=True)
@@ -1610,13 +1614,14 @@ class ItemList(PluginBase):
 		if len(self._monitor_list) > 0 and self._monitor_list[0].is_manual():
 			return
 
-		# create new monitor for specified path
-		provider = self.get_provider()
-		monitor = provider.get_monitor(path)
-		monitor.connect('changed', self._directory_changed, parent)
+		if path not in [monitor.get_path() for monitor in self._monitor_list]:
+			# create new monitor for specified path
+			provider = self.get_provider()
+			monitor = provider.get_monitor(path)
+			monitor.connect('changed', self._directory_changed, parent)
 
-		# add monitor to the list
-		self._monitor_list.append(monitor)
+			# add monitor to the list
+			self._monitor_list.append(monitor)
 
 	def cancel_monitors(self):
 		"""Cancel all monitors"""

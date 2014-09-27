@@ -11,6 +11,7 @@ import subprocess
 import glib
 import urllib
 import signal
+import fcntl
 
 from menus import MenuManager
 from mounts import MountsManager
@@ -486,6 +487,14 @@ class MainWindow(gtk.Window):
 						'name': 'show_command_entry',
 						'path': '<Sunflower>/View/ShowCommandEntry',
 					},
+					{
+						'label': _('_Horizontal split'),
+						'type': 'checkbox',
+						'active': self.options.get('horizontal_split'),
+						'callback': self._toggle_horizontal_split,
+						'name': 'horizontal_split',
+						'path': '<Sunflower>/View/HorizontalSplit',
+					},
 				)
 			},
 			{
@@ -565,7 +574,7 @@ class MainWindow(gtk.Window):
 
 		toolbar = self.toolbar_manager.get_toolbar()
 		toolbar.set_property('no-show-all', not self.options.get('show_toolbar'))
-		
+
 
 		# bookmarks menu
 		self.bookmarks = BookmarksMenu(self)
@@ -587,7 +596,7 @@ class MainWindow(gtk.Window):
 		self.menu_tools = menu_item_tools.get_submenu()
 
 		# create notebooks
-		self._paned = gtk.HPaned()
+		self._paned = gtk.VPaned() if self.options.get('horizontal_split') else gtk.HPaned()
 
 		rc_string = (
 				'style "paned-style" {GtkPaned::handle-size = 4}'
@@ -691,13 +700,13 @@ class MainWindow(gtk.Window):
 		vbox.pack_start(self.menu_bar, expand=False, fill=False, padding=0)
 		vbox.pack_start(self.toolbar_manager.get_toolbar(), expand=False, fill=False, padding=0)
 
-		vbox2 = gtk.VBox(False, 4)
-		vbox2.set_border_width(3)
-		vbox2.pack_start(self._paned, expand=True, fill=True, padding=0)
-		vbox2.pack_start(self.command_entry_bar, expand=False, fill=False, padding=0)
-		vbox2.pack_start(self.command_bar, expand=False, fill=False, padding=0)
+		self._vbox2 = gtk.VBox(False, 4)
+		self._vbox2.set_border_width(3)
+		self._vbox2.pack_start(self._paned, expand=True, fill=True, padding=0)
+		self._vbox2.pack_start(self.command_entry_bar, expand=False, fill=False, padding=0)
+		self._vbox2.pack_start(self.command_bar, expand=False, fill=False, padding=0)
 
-		vbox.pack_start(vbox2, True, True, 0)
+		vbox.pack_start(self._vbox2, True, True, 0)
 		self.add(vbox)
 
 		# create bookmarks menu
@@ -987,6 +996,32 @@ class MainWindow(gtk.Window):
 
 		return True
 
+	def _toggle_horizontal_split(self, widget=None, data=None):
+		menu_item = self.menu_manager.get_item_by_name('horizontal_split')
+
+		# NOTE: Calling set_active emits signal causing deadloop,
+		# to work around this issue we check if calling widget is menu item.
+		if widget is menu_item:
+			horizontal_split = menu_item.get_active()
+			self.options.set('horizontal_split', horizontal_split)
+
+			self._paned.remove(self.left_notebook)
+			self._paned.remove(self.right_notebook)
+			self._vbox2.remove(self._paned)
+
+			self._paned = gtk.VPaned() if horizontal_split else gtk.HPaned()
+			self._paned.pack1(self.left_notebook, resize=True, shrink=False)
+			self._paned.pack2(self.right_notebook, resize=True, shrink=False)
+
+			self._vbox2.pack_start(self._paned)
+			self._vbox2.reorder_child(self._paned, 0)
+
+			self._paned.show()
+		else:
+			menu_item.set_active(not self.options.get('horizontal_split'))
+
+		return True
+
 	def _toggle_show_command_bar(self, widget, data=None):
 		"""Show/hide command bar"""
 		menu_item = self.menu_manager.get_item_by_name('show_command_bar')
@@ -1000,7 +1035,7 @@ class MainWindow(gtk.Window):
 
 		else:
 			menu_item.set_active(not self.options.get('show_command_bar'))
-		
+
 		return True
 
 	def _toggle_show_command_entry(self, widget, data=None):
@@ -1125,7 +1160,7 @@ class MainWindow(gtk.Window):
 		for file_name in plugin_files:
 			try:
 				# determine whether we need to load user plugin or system plugin
-				user_plugin_exists = os.path.exists(os.path.join(self.user_plugin_path, file_name)) 
+				user_plugin_exists = os.path.exists(os.path.join(self.user_plugin_path, file_name))
 				load_user_plugin = user_plugin_exists and file_name not in self.protected_plugins
 
 				plugin_base_module = 'user_plugins' if load_user_plugin else 'plugins'
@@ -1275,7 +1310,7 @@ class MainWindow(gtk.Window):
 		if hasattr(active_object, '_open_in_new_tab'):
 			active_object._open_in_new_tab()
 			result = True
-		
+
 		return result
 
 	def _command_cut_to_clipboard(self, widget=None, data=None):
@@ -1534,7 +1569,7 @@ class MainWindow(gtk.Window):
 		# read all bookmarks
 		bookmark_list = self.bookmark_options.get('bookmarks')
 
-		# check if index is valid 
+		# check if index is valid
 		if index == 0:
 			path = user.home
 
@@ -1734,11 +1769,16 @@ class MainWindow(gtk.Window):
 
 			else:
 				# check for lockfile
-				if os.path.exists(lock_file):
+				try:
+					lock = open(lock_file, 'w')
+					fcntl.lockf(lock, fcntl.LOCK_EX|fcntl.LOCK_NB)
+					lock.write(str(os.getpid()))
+				except IOError:
+					print "Another copy of Sunflower is already running"
 					sys.exit()
-
-				else:
-					open(lock_file, 'w').close()
+				except OSError as oserror:
+					print "Can't create lock file {}. {}".format(lock_file, oserror)
+					sys.exit()
 
 		# create dbus interface
 		if DBus.is_available():
@@ -1811,7 +1851,7 @@ class MainWindow(gtk.Window):
 		if options is None:
 			options = Parameters()
 
-		# create plugin object 
+		# create plugin object
 		new_tab = plugin_class(self, notebook, options)
 
 		# add page to notebook
@@ -1972,7 +2012,7 @@ class MainWindow(gtk.Window):
 			elif path[0] != os.sep:
 				path = os.path.join(active_object.path, path)
 
-			# if resulting path is a directory, change 
+			# if resulting path is a directory, change
 			if active_object.get_provider().is_dir(path):
 				active_object.change_path(path)
 				active_object.focus_main_object()
@@ -2022,7 +2062,7 @@ class MainWindow(gtk.Window):
 			tab['class'] = page._name
 
 			# add tab to list
-			tab_list.append(tab)		
+			tab_list.append(tab)
 
 		# store tabs to configuration
 		section = self.tab_options.create_section(section)
@@ -2146,7 +2186,7 @@ class MainWindow(gtk.Window):
 		group.set_accelerator('restore_handle_position', keyval('Home'), gtk.gdk.MOD1_MASK)
 		group.set_accelerator('move_handle_left', keyval('Page_Up'), gtk.gdk.MOD1_MASK)
 		group.set_accelerator('move_handle_right', keyval('Page_Down'), gtk.gdk.MOD1_MASK)
-		
+
 		# expose object
 		self._accel_group = group
 
@@ -2337,7 +2377,8 @@ class MainWindow(gtk.Window):
 					'media_preview': False,
 					'active_notebook': 0,
 					'size_format': common.SizeFormat.SI,
-					'multiple_instances': False
+					'multiple_instances': False,
+					'horizontal_split': False
 				})
 
 		# set default commands
@@ -2353,11 +2394,12 @@ class MainWindow(gtk.Window):
 
 	def restore_handle_position(self, widget=None, data=None):
 		"""Restore handle position"""
-		left_width = self.left_notebook.allocation[2]
-		right_width = self.right_notebook.allocation[2]
+		position = 3 if self.options.get('horizontal_split') else 2
+		left = self.left_notebook.allocation[position]
+		right = self.right_notebook.allocation[position]
 
 		# calculate middle position
-		new_position = (left_width + right_width) / 2
+		new_position = (left + right) / 2
 		self._paned.set_position(new_position)
 
 		return True
@@ -2500,6 +2542,10 @@ class MainWindow(gtk.Window):
 		# apply media preview settings
 		media_preview = self.menu_manager.get_item_by_name('fast_media_preview')
 		media_preview.set_active(self.options.get('media_preview'))
+
+		# horizontal split
+		horizontal_split = self.menu_manager.get_item_by_name('horizontal_split')
+		horizontal_split.set_active(self.options.get('horizontal_split'))
 
 		# recreate bookmarks menu
 		self._create_bookmarks_menu()
@@ -2646,7 +2692,7 @@ class MainWindow(gtk.Window):
 	def register_popup_menu_action(self, mime_types, menu_item):
 		"""Register handler method for popup menu which will be
 		displayed if file type matches any string in mime_types.
-		
+
 		mime_types - tuple containing mime type strings
 		menu_item - menu item to be included in additional menu
 		"""
@@ -2701,11 +2747,11 @@ class MainWindow(gtk.Window):
 		"""Get list of extension classes for specified mime type"""
 		result = []
 		is_subset = self.associations_manager.is_mime_type_subset
-		
+
 		# get all classes that match any of the mime types defined
 		for mime_types, ExtensionClass in self.viewer_extensions_classes:
 			matched_types = filter(lambda iter_mime_type: is_subset(mime_type, iter_mime_type), mime_types)
-			
+
 			if len(matched_types) > 0:
 				result.append(ExtensionClass)
 
